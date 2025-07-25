@@ -43,6 +43,7 @@ export default function Page() {
     <main className="flex flex-col items-center justify-center min-h-screen bg-white text-black">
       <h1 className="text-3xl font-bold mb-6">Webtrix Stylized Map Demo</h1>
       <SceneWrapper />
+      
     </main>
 
   )

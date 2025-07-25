@@ -18,10 +18,16 @@ function latLonToXYZ(lat: any, lon: any, origin: any) {
   return [x, 0, -z]
 }
 
+type BuildingProps = {
+  position: any
+  color: string
+  onClick: () => void
+}
 
-function Building({ position, color = 'orange' }: { position: any, color: any }) {
+
+function Building({ position, color, onClick }: BuildingProps) {
   return (
-    <mesh position={position} castShadow receiveShadow>
+    <mesh position={position} castShadow receiveShadow onClick={onClick} >
       <boxGeometry args={[5, 10, 5]} />
       <meshStandardMaterial color={color} flatShading />
     </mesh>
@@ -50,11 +56,14 @@ export default function SceneWrapper() {
   const [avatarPos, setAvatarPos] = useState<[number, number, number]>([0, 0, 0])
   const [origin] = useState(mockGPS)
 
+  const [selectedBuilding, setSelectedBuilding] = useState<null | { lat: number; lon: number; color: string }>(null)
+
   const buildings = [
-    { lat: origin.lat + 0.0002, lon: origin.lon + 0.0001, color: 'tomato' },
-    { lat: origin.lat - 0.0003, lon: origin.lon + 0.0004, color: 'skyblue' },
-    { lat: origin.lat + 0.0001, lon: origin.lon - 0.0003, color: 'limegreen' },
+    { lat: origin.lat + 0.0002, lon: origin.lon + 0.0001, color: 'tomato', name: "Home"},
+    { lat: origin.lat - 0.0003, lon: origin.lon + 0.0004, color: 'skyblue', name: "Windmatrix" },
+    { lat: origin.lat + 0.0001, lon: origin.lon - 0.0003, color: 'limegreen', name: "Music" },
   ]
+
 
   return (
     <div ref={containerRef} style={{ width: '100vw', height: '100vh', touchAction: 'none' }}>
@@ -74,12 +83,35 @@ export default function SceneWrapper() {
         <Avatar position={avatarPos} setPosition={setAvatarPos} />
         {/*<CameraFollow targetPosition={avatarPos} />*/}
         <CameraWithOrbit targetPosition={avatarPos} />
-        {buildings.map(({ lat, lon, color }, i) => {
-          const pos = latLonToXYZ(lat, lon, origin)
-          return <Building key={i} position={pos} color={color} />
+        {buildings.map((b, i) => {
+          const pos = latLonToXYZ(b.lat, b.lon, origin)
+          return (
+            <Building
+              key={i}
+              position={pos}
+              color={b.color}
+              onClick={() => setSelectedBuilding(b)}
+            />
+          )
         })}
+
         <OrbitControls />
       </Canvas>
+      {selectedBuilding && (
+        <div className="fixed bottom-4 left-4 bg-white bg-opacity-90 p-4 rounded shadow-lg max-w-xs">
+          <h2 className="font-bold mb-2">Site Info</h2>
+          <p>Latitude: {selectedBuilding.lat.toFixed(6)}</p>
+          <p>Longitude: {selectedBuilding.lon.toFixed(6)}</p>
+          <p>Color: {selectedBuilding.color}</p>
+          <button
+            className="mt-2 px-3 py-1 bg-red-500 text-white rounded"
+            onClick={() => setSelectedBuilding(null)}
+          >
+            Close
+          </button>
+        </div>
+      )}
+
     </div>
   )
 }
