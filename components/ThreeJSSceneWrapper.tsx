@@ -5,6 +5,7 @@ import Avatar from './Avatar'
 import CameraWithOrbit from './CameraWithOrbit'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
+import WebGLScene from './ThreeJSScene';
 // import other scene elements as needed
 
 
@@ -80,7 +81,7 @@ function Building({ position, color, onClick }: BuildingProps) {
 
 
 
-export default function SceneWrapper() {
+export default function WebGLSceneWrapper() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -112,36 +113,7 @@ export default function SceneWrapper() {
 
   return (
     <div ref={containerRef} style={{ width: '100vw', height: '100vh', touchAction: 'none' }}>
-      <Canvas shadows camera={{ position: [0, 20, 30], fov: 50 }} className="rounded-lg shadow-lg">
-        <ambientLight intensity={0.5} />
-        <directionalLight
-          castShadow
-          position={[10, 20, 10]}
-          intensity={1.5}
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
-        />
-        <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <planeGeometry args={[200, 200]} />
-          <meshStandardMaterial color="#111" />
-        </mesh>
-        <Avatar position={avatarPos} setPosition={setAvatarPos} />
-        {/*<CameraFollow targetPosition={avatarPos} />*/}
-        <CameraWithOrbit targetPosition={avatarPos} />
-        {buildings.map((b, i) => {
-          const pos = latLonToXYZ(b.lat, b.lon, origin)
-          return (
-            <Building
-              key={i}
-              position={pos}
-              color={b.color}
-              onClick={() => setSelectedBuilding(b)}
-            />
-          )
-        })}
-
-        <OrbitControls />
-      </Canvas>
+      <WebGLScene />
       {selectedBuilding && (
         <div className="fixed bottom-4 left-4 bg-white bg-opacity-90 p-4 rounded shadow-lg max-w-xs">
           <h2 className="font-bold mb-2">Site Info</h2>
@@ -160,3 +132,19 @@ export default function SceneWrapper() {
     </div>
   )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
