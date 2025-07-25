@@ -5,7 +5,7 @@ import Avatar from './Avatar'
 import CameraWithOrbit from './CameraWithOrbit'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import WebGLScene from './ThreeJSScene';
+import ThreeScene from './ThreeJSScene';
 // import other scene elements as needed
 
 
@@ -81,7 +81,7 @@ function Building({ position, color, onClick }: BuildingProps) {
 
 
 
-export default function WebGLSceneWrapper() {
+export default function ThreeSceneWrapper() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -113,7 +113,7 @@ export default function WebGLSceneWrapper() {
 
   return (
     <div ref={containerRef} style={{ width: '100vw', height: '100vh', touchAction: 'none' }}>
-      <WebGLScene />
+      <ThreeScene />
       {selectedBuilding && (
         <div className="fixed bottom-4 left-4 bg-white bg-opacity-90 p-4 rounded shadow-lg max-w-xs">
           <h2 className="font-bold mb-2">Site Info</h2>

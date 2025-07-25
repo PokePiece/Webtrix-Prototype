@@ -13,6 +13,10 @@ import { gpsToXY } from "@/lib/geo";
 import { Vector3 } from "three";
 import Avatar from "./3DAvatar";
 import Buildings from "./Buildings";
+import NewBuildings from "./NewBuildings";
+import NewestBuildings from "./NewestBuildings";
+import OrbitCameraControls from "./OrbitCameraControls";
+import ComplexBuildings from "./ComplexBuildings";
 
 
 function TopDownCamera() {
@@ -31,18 +35,18 @@ function TopDownCamera() {
 }
 
 function ObliqueCamera() {
-  const { camera } = useThree();
-  const target = new Vector3(0, 0, 0);
+    const { camera } = useThree();
+    const target = new Vector3(0, 0, 0);
 
-  useFrame(() => {
-    // Position camera somewhat above and behind the avatar/map center, angled down
-    camera.position.set(200, 200, 200); // Adjust these values for desired angle/distance
-    camera.lookAt(target);
-    camera.up.set(0, 1, 0); // Standard Y-up
-    camera.updateProjectionMatrix();
-  });
+    useFrame(() => {
+        // Position camera somewhat above and behind the avatar/map center, angled down
+        camera.position.set(200, 200, 200); // Adjust these values for desired angle/distance
+        camera.lookAt(target);
+        camera.up.set(0, 1, 0); // Standard Y-up
+        camera.updateProjectionMatrix();
+    });
 
-  return null;
+    return null;
 }
 
 
@@ -58,39 +62,123 @@ function gpsToXZ(lat: number, lon: number): [number, number] {
     return [x, z];
 }
 
+type ComplexBuilding = {
+    id: number
+    coords: [number, number][]
+    height: number
+    name?: string
+    type?: string
+    amenity?: string
+    address?: string
+    wikidata?: string
+    wikipedia?: string
+    website?: string
+}
 
 
 
-export default function WebGLScene() {
-    const [buildings, setBuildings] = useState<[number, number][][]>([]);
+
+
+export default function ThreeScene() {
+    const [buildings, setBuildings] = useState<ComplexBuilding[]>([])
+    const [selectedBuilding, setSelectedBuilding] = useState<ComplexBuilding | null>(null)
     const [avatarPos, setAvatarPos] = useState<any>([0, 0, 0]);
 
 
-  
 
-  
+
+
     useEffect(() => {
         const [x, z] = gpsToXZ(40.765, -111.89); // Replace with your mock GPS
         setAvatarPos([x, 0, z]); // y=0 on ground
     }, []);
 
 
+
     useEffect(() => {
-        fetchBuildingData().then((data) => {
-            setBuildings(data.buildings.map(b => b.coords));
-        });
-    }, []);
+        fetchBuildingData().then((res) => {
+            setBuildings(res.buildings)
+        })
+    }, [])
+
+
+
+    /*
+        useEffect(() => {
+            fetchBuildingData().then((data) => {
+                setBuildings(
+                    data.buildings.map(b => ({
+                        coords: b.coords,
+                        height: b.height ?? 10 // or random / derived later
+                    }))
+                );
+            });
+        }, []);
+    */
+
 
     return (
-        <Canvas>
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[10, 10, 10]} />
-            <ObliqueCamera />
+        <>
+            <Canvas
+                style={{ background: 'lightBlue' }}
+                onCreated={({ scene }) => {
+                    scene.background = new THREE.Color('#05021C'); // light sky blue
 
-            <Buildings buildingData={buildings} />
+                }}
+            >
+                <ambientLight intensity={0.5} />
+                <directionalLight position={[10, 10, 10]} />
+                <OrbitCameraControls />
+                <ComplexBuildings buildingData={buildings} onSelect={setSelectedBuilding} />
 
-            <Avatar position={avatarPos} setAvatarPos={setAvatarPos} />
-        </Canvas>
+
+                <Avatar position={avatarPos} setAvatarPos={setAvatarPos} />
+
+                {/* Ground plane */}
+                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+                    <planeGeometry args={[1800, 1300]} />
+                    <meshStandardMaterial color="darkgrey" />
+                </mesh>
+            </Canvas>
+            {selectedBuilding && (
+                <div className="absolute top-4 left-4 bg-white text-black p-4 rounded shadow z-50">
+                    <p><strong>Name:</strong> {selectedBuilding.name ?? "—"}</p>
+                    <p><strong>Height:</strong> {selectedBuilding.height ?? "—"}m</p>
+                    <p><strong>ID:</strong> {selectedBuilding.id ?? "—"}</p>
+                    <p><strong>Type:</strong> {selectedBuilding.type ?? "—"}</p>
+                    <p><strong>Amenity:</strong> {selectedBuilding.amenity ?? "—"}</p>
+                    <p><strong>Address:</strong> {selectedBuilding.address ?? "—"}</p>
+                    <p><strong>Wikipedia:</strong> {selectedBuilding.wikipedia ?? "—"}</p>
+                    <p><strong>Wikidata:</strong> {selectedBuilding.wikidata ?? "—"}</p>
+                    <p>
+                        <strong>Website:</strong>{" "}
+                        {selectedBuilding.website ? (
+                            <a
+                                href={selectedBuilding.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 underline"
+                            >
+                                {selectedBuilding.website}
+                            </a>
+                        ) : (
+                            "—"
+                        )}
+                    </p>
+
+                    <button
+                        className="mt-2 bg-gray-200 px-2 py-1 rounded"
+                        onClick={() => setSelectedBuilding(null)}
+                    >
+                        Close
+                    </button>
+                </div>
+            )}
+
+
+
+
+        </>
     );
 }
 

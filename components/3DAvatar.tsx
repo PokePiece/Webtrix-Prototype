@@ -50,32 +50,32 @@ export default function Avatar({
   // Consider changing it so updates only when movement is detected
 
 
-useEffect(() => {
-  const interval = setInterval(() => {
-    if (!ref.current) return;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!ref.current) return;
 
-    const [prevX, prevY, prevZ] = ref.current.position.toArray();
-    let x = prevX;
-    let y = prevY;
-    let z = prevZ;
+      const [prevX, prevY, prevZ] = ref.current.position.toArray();
+      let x = prevX;
+      let y = prevY;
+      let z = prevZ;
 
-    const speed = 2;
+      const speed = 5;
 
-    let moved = false;
-    if (keys.current.w) { z -= speed; moved = true; }
-    if (keys.current.s) { z += speed; moved = true; }
-    if (keys.current.a) { x -= speed; moved = true; }
-    if (keys.current.d) { x += speed; moved = true; }
+      let moved = false;
+      if (keys.current.w) { z -= speed; moved = true; }
+      if (keys.current.s) { z += speed; moved = true; }
+      if (keys.current.a) { x -= speed; moved = true; }
+      if (keys.current.d) { x += speed; moved = true; }
 
-    if (moved) {
-      const newPos: [number, number, number] = [x, y, z];
-      ref.current.position.set(...newPos);
-      setAvatarPos(newPos);
-    }
-  }, 50);
+      if (moved) {
+        const newPos: [number, number, number] = [x, y, z];
+        ref.current.position.set(...newPos);
+        setAvatarPos(newPos);
+      }
+    }, 50);
 
-  return () => clearInterval(interval);
-}, [position[0], position[1], position[2]]);
+    return () => clearInterval(interval);
+  }, [position[0], position[1], position[2]]);
 
 
 
@@ -100,9 +100,44 @@ useEffect(() => {
   }, []);
 
   return (
+    <group ref={ref} scale={[10, 10, 10]}>
+      <mesh position={[0, 1, 0]}>
+        <capsuleGeometry args={[0.5, 1.5, 4, 8]} />
+        <meshStandardMaterial color="orange" />
+      </mesh>
+      <mesh position={[0, 2.3, 0]}>
+        <sphereGeometry args={[0.5, 16, 16]} />
+        <meshStandardMaterial color="orange" />
+      </mesh>
+    </group>
+  );
+}
+
+
+
+//Basic person
+/*
+
+<group ref={ref} scale={[10, 10, 10]}>
+      <mesh position={[0, 1, 0]}>
+        <capsuleGeometry args={[0.5, 1.5, 4, 8]} />
+        <meshStandardMaterial color="orange" />
+      </mesh>
+      <mesh position={[0, 2.3, 0]}>
+        <sphereGeometry args={[0.5, 16, 16]} />
+        <meshStandardMaterial color="orange" />
+      </mesh>
+    </group>
+
+
+*/
+
+
+//Red sphere avatar
+
+/*
     <mesh ref={ref} scale={[10, 10, 10]}>
       <sphereGeometry args={[1, 32, 32]} />
       <meshStandardMaterial color="red" />
     </mesh>
-  );
-}
+*/

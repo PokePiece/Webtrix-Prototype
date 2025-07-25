@@ -55,3 +55,6 @@ export default function Buildings({ buildingData }: { buildingData: Coord[][] })
     />
   )
 }
+
+
+

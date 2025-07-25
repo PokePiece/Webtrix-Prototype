@@ -8,7 +8,7 @@ import CameraFollow from '@/components/CameraFollow'
 import CameraWithOrbit from '@/components/CameraWithOrbit'
 import SceneWrapper from '@/components/CanvasWrapper'
 import WebGLScene from '@/components/ThreeJSScene'
-import WebGLSceneWrapper from '@/components/ThreeJSSceneWrapper'
+import ThreeSceneWrapper from '@/components/ThreeJSSceneWrapper'
 
 
 const mockGPS = { lat: 40.7128, lon: -74.006 }
@@ -42,11 +42,11 @@ export default function Page() {
   ]
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-white text-black">
-      <h1 className="text-3xl font-bold mb-6">Webtrix Stylized Map Demo</h1>
+    <main className="flex flex-col items-center justify-center min-h-screen mt-5 bg-white text-black">
+      <h1 className="text-3xl mb-6">Webtrix World</h1>
       {/*<SceneWrapper />*/}
       {/*<WebGLScene />*/}
-      <WebGLSceneWrapper />
+      <ThreeSceneWrapper />
     </main>
 
   )
