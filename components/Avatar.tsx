@@ -2,13 +2,14 @@ import { useFrame } from '@react-three/fiber'
 import { useRef, useState, useEffect } from 'react'
 import * as THREE from 'three'
 
-export default function Avatar() {
-  const ref = useRef<THREE.Group>(null)
-  // Position as tuple [x, y, z]
-  const [pos, setPos] = useState<[number, number, number]>([0, 0, 0])
+type AvatarProps = {
+  position: [number, number, number]
+  setPosition: React.Dispatch<React.SetStateAction<[number, number, number]>>
+}
 
-  // Track which keys are pressed
-  const keys = useRef<{[key: string]: boolean}>({})
+export default function Avatar({ position, setPosition }: AvatarProps) {
+  const ref = useRef<THREE.Group>(null)
+  const keys = useRef<{ [key: string]: boolean }>({})
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -26,27 +27,19 @@ export default function Avatar() {
   }, [])
 
   useFrame((_, delta) => {
-    let [x, y, z] = pos
-    const speed = 10 // units per second
+    let [x, y, z] = position
+    const speed = 10
 
-    if (keys.current['w'] || keys.current['arrowup']) {
-      z -= speed * delta
-    }
-    if (keys.current['s'] || keys.current['arrowdown']) {
-      z += speed * delta
-    }
-    if (keys.current['a'] || keys.current['arrowleft']) {
-      x -= speed * delta
-    }
-    if (keys.current['d'] || keys.current['arrowright']) {
-      x += speed * delta
-    }
+    if (keys.current['w'] || keys.current['arrowup']) z -= speed * delta
+    if (keys.current['s'] || keys.current['arrowdown']) z += speed * delta
+    if (keys.current['a'] || keys.current['arrowleft']) x -= speed * delta
+    if (keys.current['d'] || keys.current['arrowright']) x += speed * delta
 
-    // Optional: clamp position within map bounds (e.g., -100 to 100)
+    // Clamp bounds if needed
     x = Math.min(100, Math.max(-100, x))
     z = Math.min(100, Math.max(-100, z))
 
-    setPos([x, y, z])
+    setPosition([x, y, z])
 
     if (ref.current) {
       ref.current.position.set(x, y, z)
