@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { Html, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { fetchBuildingData } from "@/lib/fetchBuildings";
 import { useThree } from "@react-three/fiber";
@@ -17,6 +17,8 @@ import NewBuildings from "./NewBuildings";
 import NewestBuildings from "./NewestBuildings";
 import OrbitCameraControls from "./OrbitCameraControls";
 import ComplexBuildings from "./ComplexBuildings";
+import RiftInstance from "./RiftInstance";
+import TheRiftInstance from "./RiftInstance";
 
 
 function TopDownCamera() {
@@ -73,7 +75,9 @@ type ComplexBuilding = {
     wikidata?: string
     wikipedia?: string
     website?: string
+    webspace?: string
 }
+
 
 
 
@@ -139,6 +143,17 @@ export default function ThreeScene() {
                     <planeGeometry args={[1800, 1300]} />
                     <meshStandardMaterial color="darkgrey" />
                 </mesh>
+                <Html position={new THREE.Vector3(0, 20, 0).clone().setY(35)} center>
+                                <a href='https://dilloncarey.com' target="_blank" rel="noopener noreferrer">
+                                  🔗 Open Webspace
+                                </a>
+                              </Html>
+                <RiftInstance
+                    center={new THREE.Vector3(0, 20, 0)}
+                    height={20}
+                    offset={new THREE.Vector3(0, 20, 0)}
+                />
+
             </Canvas>
             {selectedBuilding && (
                 <div className="absolute top-4 left-4 bg-white text-black p-4 rounded shadow z-50">
@@ -151,15 +166,15 @@ export default function ThreeScene() {
                     <p><strong>Wikipedia:</strong> {selectedBuilding.wikipedia ?? "—"}</p>
                     <p><strong>Wikidata:</strong> {selectedBuilding.wikidata ?? "—"}</p>
                     <p>
-                        <strong>Website:</strong>{" "}
-                        {selectedBuilding.website ? (
+                        <strong>Webspace:</strong>{" "}
+                        {selectedBuilding.webspace ? (
                             <a
-                                href={selectedBuilding.website}
+                                href={selectedBuilding.webspace}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-500 underline"
                             >
-                                {selectedBuilding.website}
+                                {selectedBuilding.webspace}
                             </a>
                         ) : (
                             "—"

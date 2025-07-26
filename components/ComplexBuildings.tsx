@@ -1,6 +1,8 @@
 // ComplexBuildings.tsx
 import { useMemo, useState } from 'react'
 import * as THREE from 'three'
+import RiftInstance from './RiftInstance'
+import { Html } from '@react-three/drei';
 
 type Coord = [number, number]
 
@@ -21,19 +23,6 @@ interface ComplexBuildingProps {
 }
 
 type ComplexBuilding = {
-    id: number
-    coords: [number, number][]
-    height: number
-    name?: string
-    type?: string
-    amenity?: string
-    address?: string
-    wikidata?: string
-    wikipedia?: string
-    website?: string
-}
-
-type BuildingData = {
   id: number
   coords: [number, number][]
   height: number
@@ -44,6 +33,7 @@ type BuildingData = {
   wikidata?: string
   wikipedia?: string
   website?: string
+  webspace?: string
 }
 
 
@@ -53,14 +43,14 @@ export default function ComplexBuildings({
   onSelect,
 }: ComplexBuildingProps & { onSelect: (data: any) => void }) {
   const buildings = useMemo(() => {
-    return buildingData.map(({ coords, height, id, name, type, amenity, address, wikidata, wikipedia, website }, i) => {
+    return buildingData.map(({ coords, height, id, name, type, amenity, address, wikidata, wikipedia, website, webspace }, i) => {
       const shape = new THREE.Shape()
       coords.forEach(([lon, lat], idx) => {
         const [x, y] = gpsToXY(lat, lon)
         if (idx === 0) shape.moveTo(x, y)
         else shape.lineTo(x, y)
       })
-      
+
 
       const geometry = new THREE.ExtrudeGeometry(shape, {
         depth: height,
@@ -68,18 +58,40 @@ export default function ComplexBuildings({
       })
       geometry.rotateX(-Math.PI / 2)
 
+      const center = new THREE.Vector3()
+      geometry.computeBoundingBox()
+      geometry.boundingBox?.getCenter(center)
+
+
       return (
-        <mesh
-          key={i}
-          geometry={geometry}
-          onClick={(e) => {
-            e.stopPropagation()
-            onSelect({  coords, height, id, name, type, amenity, address, wikidata, wikipedia, website }) // pass basic info up
-          }}
-        >
-          <meshStandardMaterial color="lightblue" />
-        </mesh>
+        <group key={i}>
+          <mesh
+            geometry={geometry}
+            onClick={(e) => {
+              e.stopPropagation()
+              onSelect({ coords, height, id, name, type, amenity, address, wikidata, wikipedia, website, webspace })
+            }}
+          >
+            <meshStandardMaterial color="lightblue" />
+          </mesh>
+
+          {webspace && (
+            <group>
+              <RiftInstance
+                center={center}
+                height={height}
+                offset={new THREE.Vector3(0, 20, 0)}
+              />
+              <Html position={center.clone().setY(height + 12)} center>
+                <a href={webspace} target="_blank" rel="noopener noreferrer">
+                  🔗 Open Webspace
+                </a>
+              </Html>
+            </group>
+          )}
+        </group>
       )
+
     })
   }, [buildingData, onSelect])
 

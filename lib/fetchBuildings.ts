@@ -52,7 +52,9 @@ export async function fetchBuildingData(): Promise<{
     wikidata?: string
     wikipedia?: string
     website?: string
+    webspace?: string // NEW
   }[] = []
+
 
 
   // Populate node map
@@ -103,7 +105,9 @@ export async function fetchBuildingData(): Promise<{
           wikidata: el.tags?.wikidata,
           wikipedia: el.tags?.wikipedia,
           website: el.tags?.website,
-        })
+          webspace: metadata?.webspace // NEW
+        });
+
 
       }
 
