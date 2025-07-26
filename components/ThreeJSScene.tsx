@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { fetchBuildingData } from "@/lib/fetchBuildings";
@@ -65,7 +65,14 @@ export default function ThreeScene() {
     const [controlMode, setControlMode] = useState<'avatar' | 'freecam' | 'freehidden'>('avatar')
     const [isChatting, setIsChatting] = useState(false)
     const [chatActive, setChatActive] = useState(false)
+    const [followingSur, setFollowingSur] = useState(false);
+    const lastSurPos = useRef<[number, number, number]>([avatarPos[0] - 5, avatarPos[1], avatarPos[2] - 10])
+    const [surPos, setSurPos] = useState<[number, number, number]>([0, 0, -10])
 
+
+    if (followingSur) {
+        lastSurPos.current = [avatarPos[0], avatarPos[1], avatarPos[2] - 5]
+    }
 
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
@@ -103,6 +110,28 @@ export default function ThreeScene() {
     }, [])
 
 
+    function SurFollower() {
+        useFrame(() => {
+            if (!followingSur) return;
+
+            const target: [number, number, number] = [
+                avatarPos[0] + 10,
+                avatarPos[1],
+                avatarPos[2] - 10,
+            ];
+            const speed = 0.05;
+
+            setSurPos(([x, y, z]) => [
+                x + (target[0] - x) * speed,
+                y + (target[1] - y) * speed,
+                z + (target[2] - z) * speed,
+            ]);
+        });
+
+        return null;
+    }
+
+
     return (
 
 
@@ -138,7 +167,12 @@ export default function ThreeScene() {
                             </editable.group>
                         </>
                     )}
-                    <SurAvatar position={[0, 0, -10]} active={false} />
+                    <SurAvatar
+                        position={surPos}
+                        active={followingSur}
+                        onClick={() => setFollowingSur(!followingSur)}
+                    />
+                    <SurFollower />
                     {/* Ground plane */}
                     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
                         <planeGeometry args={[1800, 1300]} />

@@ -2,6 +2,7 @@
 import { Html } from '@react-three/drei'
 import React, { useState } from 'react'
 import { controlsEnabledRef } from './ThirdPersonCamera'
+import { fetchChatResponse } from '@/lib/fetchChatResponse'
 
 type ChatOverlayProps = {
     isChatting: boolean
@@ -12,12 +13,15 @@ type ChatOverlayProps = {
 export default function ChatOverlay({ isChatting, setIsChatting }: ChatOverlayProps) {
     const [messages, setMessages] = useState<string[]>([])
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             const inputValue = e.currentTarget.value.trim()
             if (inputValue) {
                 setMessages((prev) => [...prev, `User: ${inputValue}`])
                 e.currentTarget.value = ''
+
+                const reply = await fetchChatResponse(inputValue)
+                setMessages((prev) => [...prev, `Sur: ${reply}`])
             }
         }
     }

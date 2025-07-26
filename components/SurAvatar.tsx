@@ -5,7 +5,8 @@ import * as THREE from 'three'
 const SurAvatar = forwardRef<THREE.Group, {
   position: [number, number, number]
   active: boolean
-}>(({ position, active }, ref) => {
+  onClick?: (e: React.MouseEvent) => void
+}>(({ position, active, onClick }, ref) => {
   const internalRef = useRef<THREE.Group>(null)
   const groupRef = (ref as React.RefObject<THREE.Group>) || internalRef
 
@@ -13,7 +14,12 @@ const SurAvatar = forwardRef<THREE.Group, {
   // and provide motion logic (based on AI or manual control).
 
   return (
-    <group ref={groupRef} scale={[5, 5, 5]} position={position}>
+    <group
+      ref={groupRef}
+      scale={[5, 5, 5]}
+      position={position}
+      onClick={onClick}
+    >
       <mesh position={[0, 1, 0]}>
         <capsuleGeometry args={[0.5, 1.5, 4, 8]} />
         <meshStandardMaterial color="#ffbb66" />

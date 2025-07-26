@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useRef } from 'react'
+import React, { forwardRef, useEffect, useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -13,25 +13,37 @@ const Avatar = forwardRef<THREE.Group, {
   const internalRef = useRef<THREE.Group>(null)
   const groupRef = (ref as React.RefObject<THREE.Group>) || internalRef
   const { camera } = useThree()
+  const [lastSpokenText, setLastSpokenText] = useState('')
+  const [showBubble, setShowBubble] = useState(false)
 
   useEffect(() => {
-  const down = (e: KeyboardEvent) => {
-    if (!active) return
-    const key = e.key.toLowerCase()
-    if (key in keys.current) keys.current[key as keyof typeof keys.current] = true
+  if (lastSpokenText) {
+    setShowBubble(true)
+    const timeout = setTimeout(() => setShowBubble(false), 3000)
+    return () => clearTimeout(timeout)
   }
-  const up = (e: KeyboardEvent) => {
-    if (!active) return
-    const key = e.key.toLowerCase()
-    if (key in keys.current) keys.current[key as keyof typeof keys.current] = false
-  }
-  window.addEventListener('keydown', down)
-  window.addEventListener('keyup', up)
-  return () => {
-    window.removeEventListener('keydown', down)
-    window.removeEventListener('keyup', up)
-  }
-}, [active])
+}, [lastSpokenText])
+
+
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (!active) return
+      const key = e.key.toLowerCase()
+      if (key in keys.current) keys.current[key as keyof typeof keys.current] = true
+    }
+    const up = (e: KeyboardEvent) => {
+      if (!active) return
+      const key = e.key.toLowerCase()
+      if (key in keys.current) keys.current[key as keyof typeof keys.current] = false
+    }
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
+    return () => {
+      window.removeEventListener('keydown', down)
+      window.removeEventListener('keyup', up)
+    }
+  }, [active])
 
 
   useFrame((_, delta) => {
