@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 
-const CanvasWrapper = dynamic(() => import('@/components/webmatrix/CanvasWrapper'), {
+const CanvasWrapper = dynamic(() => import('@/components/webmatrix-proto/CanvasWrapper'), {
     ssr: false,
 });
 
@@ -13,11 +13,11 @@ export default function Page() {
 
             {/* Overlay HTML */}
             <div className="absolute top-0 left-0 w-full z-10 pointer-events-none">
-                <div className="flex text-black flex-col justify-center items-center mt-10">
-                    <h1 className="text-2xl text-black text-center">Webmatrix</h1>
-                    <p className="text-lg text-black text-center">The interconnected sphere of the future that breathes.</p>
+                <div className="flex flex-col justify-center items-center mt-10">
+                    <h1 className="text-2xl text-white text-center">Webmatrix</h1>
+                    <p className="text-lg text-white text-center">The interconnected sphere of the future that breathes.</p>
                 </div>
-                <span className='text-white'></span>
+
             </div>
         </main>
     );

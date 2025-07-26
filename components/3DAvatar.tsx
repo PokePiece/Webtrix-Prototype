@@ -1,106 +1,63 @@
-import { useEffect, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import React, { forwardRef, useEffect, useRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import * as THREE from 'three'
 
-export default function Avatar({
-  position,
-  setAvatarPos
-}: {
-  position: [number, number, number];
-  setAvatarPos: (pos: [number, number, number]) => void;
-}) {
-  const ref = useRef<THREE.Mesh>(null);
-  const keys = useRef({ w: false, a: false, s: false, d: false });
-  const meshRef = useRef<THREE.Mesh>(null);
-  const previousPosition = useRef<string>("");
-
-  /*
-  useFrame(() => {
-    if (!ref.current) return;
-
-    let [x, y, z] = position;
-    const speed = 2;
-
-    if (keys.current.w) z -= speed;
-    if (keys.current.s) z += speed;
-    if (keys.current.a) x -= speed;
-    if (keys.current.d) x += speed;
-
-    const newPos: [number, number, number] = [x, y, z];
-
-    // Update visual position
-    ref.current.position.set(...newPos);
-
-    // Update state
-    setAvatarPos(newPos);
-  });
-*/
-
-  /*
-  useEffect(() => {
-    const posRef = { current: [...position] as [number, number, number] };
-    const interval = setInterval(() => {
-      posRef.current[0] += 0.05;
-      posRef.current[2] += 0.05;
-      setAvatarPos([...posRef.current]);
-    }, 16);
-    return () => clearInterval(interval);
-  }, [setAvatarPos]);
-  */
-  // Consider changing it so updates only when movement is detected
-
+const Avatar = forwardRef<THREE.Group, {
+  position: [number, number, number]
+  setAvatarPos: (pos: [number, number, number]) => void
+}>(({ position, setAvatarPos }, ref) => {
+  const keys = useRef({ w: false, a: false, s: false, d: false })
+  const internalRef = useRef<THREE.Group>(null)
+  const groupRef = (ref as React.RefObject<THREE.Group>) || internalRef
+  const { camera } = useThree()
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (!ref.current) return;
-
-      const [prevX, prevY, prevZ] = ref.current.position.toArray();
-      let x = prevX;
-      let y = prevY;
-      let z = prevZ;
-
-      const speed = 5;
-
-      let moved = false;
-      if (keys.current.w) { z -= speed; moved = true; }
-      if (keys.current.s) { z += speed; moved = true; }
-      if (keys.current.a) { x -= speed; moved = true; }
-      if (keys.current.d) { x += speed; moved = true; }
-
-      if (moved) {
-        const newPos: [number, number, number] = [x, y, z];
-        ref.current.position.set(...newPos);
-        setAvatarPos(newPos);
-      }
-    }, 50);
-
-    return () => clearInterval(interval);
-  }, [position[0], position[1], position[2]]);
-
-
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      if (key in keys.current) keys.current[key as keyof typeof keys.current] = true;
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      if (key in keys.current) keys.current[key as keyof typeof keys.current] = false;
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
+    const down = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase()
+      if (key in keys.current) keys.current[key as keyof typeof keys.current] = true
+    }
+    const up = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase()
+      if (key in keys.current) keys.current[key as keyof typeof keys.current] = false
+    }
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
+      window.removeEventListener('keydown', down)
+      window.removeEventListener('keyup', up)
+    }
+  }, [])
+
+  useFrame((_, delta) => {
+    if (!groupRef.current) return
+
+    const speed = 100
+    const move = new THREE.Vector3()
+
+    // Get camera forward and right vectors projected onto XZ plane
+    const camDir = new THREE.Vector3()
+    camera.getWorldDirection(camDir)
+    camDir.y = 0
+    camDir.normalize()
+
+    const right = new THREE.Vector3()
+    right.crossVectors(camDir, new THREE.Vector3(0, 1, 0)).normalize()
+
+    // Movement in camera-relative space
+    if (keys.current.w) move.add(camDir)
+    if (keys.current.s) move.sub(camDir)
+    if (keys.current.d) move.add(right)
+    if (keys.current.a) move.sub(right)
+
+    if (move.lengthSq() > 0) {
+      move.normalize().multiplyScalar(speed * delta)
+      groupRef.current.position.add(move)
+      setAvatarPos(groupRef.current.position.toArray() as [number, number, number])
+    }
+  })
 
   return (
-    <group ref={ref} scale={[10, 10, 10]}>
+    <group ref={groupRef} scale={[10, 10, 10]} position={position}>
       <mesh position={[0, 1, 0]}>
         <capsuleGeometry args={[0.5, 1.5, 4, 8]} />
         <meshStandardMaterial color="orange" />
@@ -110,34 +67,7 @@ export default function Avatar({
         <meshStandardMaterial color="orange" />
       </mesh>
     </group>
-  );
-}
+  )
+})
 
-
-
-//Basic person
-/*
-
-<group ref={ref} scale={[10, 10, 10]}>
-      <mesh position={[0, 1, 0]}>
-        <capsuleGeometry args={[0.5, 1.5, 4, 8]} />
-        <meshStandardMaterial color="orange" />
-      </mesh>
-      <mesh position={[0, 2.3, 0]}>
-        <sphereGeometry args={[0.5, 16, 16]} />
-        <meshStandardMaterial color="orange" />
-      </mesh>
-    </group>
-
-
-*/
-
-
-//Red sphere avatar
-
-/*
-    <mesh ref={ref} scale={[10, 10, 10]}>
-      <sphereGeometry args={[1, 32, 32]} />
-      <meshStandardMaterial color="red" />
-    </mesh>
-*/
+export default Avatar
