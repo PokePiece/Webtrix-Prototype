@@ -5,33 +5,40 @@ import * as THREE from 'three'
 const Avatar = forwardRef<THREE.Group, {
   position: [number, number, number]
   setAvatarPos: (pos: [number, number, number]) => void
-}>(({ position, setAvatarPos }, ref) => {
+  active: boolean
+}>(({ position, setAvatarPos, active }, ref) => {
+
+
   const keys = useRef({ w: false, a: false, s: false, d: false })
   const internalRef = useRef<THREE.Group>(null)
   const groupRef = (ref as React.RefObject<THREE.Group>) || internalRef
   const { camera } = useThree()
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase()
-      if (key in keys.current) keys.current[key as keyof typeof keys.current] = true
-    }
-    const up = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase()
-      if (key in keys.current) keys.current[key as keyof typeof keys.current] = false
-    }
-    window.addEventListener('keydown', down)
-    window.addEventListener('keyup', up)
-    return () => {
-      window.removeEventListener('keydown', down)
-      window.removeEventListener('keyup', up)
-    }
-  }, [])
+  const down = (e: KeyboardEvent) => {
+    if (!active) return
+    const key = e.key.toLowerCase()
+    if (key in keys.current) keys.current[key as keyof typeof keys.current] = true
+  }
+  const up = (e: KeyboardEvent) => {
+    if (!active) return
+    const key = e.key.toLowerCase()
+    if (key in keys.current) keys.current[key as keyof typeof keys.current] = false
+  }
+  window.addEventListener('keydown', down)
+  window.addEventListener('keyup', up)
+  return () => {
+    window.removeEventListener('keydown', down)
+    window.removeEventListener('keyup', up)
+  }
+}, [active])
+
 
   useFrame((_, delta) => {
+    if (!groupRef.current || !active) return
     if (!groupRef.current) return
 
-    const speed = 100
+    const speed = 25
     const move = new THREE.Vector3()
 
     // Get camera forward and right vectors projected onto XZ plane
@@ -57,7 +64,7 @@ const Avatar = forwardRef<THREE.Group, {
   })
 
   return (
-    <group ref={groupRef} scale={[10, 10, 10]} position={position}>
+    <group ref={groupRef} scale={[5, 5, 5]} position={position}>
       <mesh position={[0, 1, 0]}>
         <capsuleGeometry args={[0.5, 1.5, 4, 8]} />
         <meshStandardMaterial color="orange" />

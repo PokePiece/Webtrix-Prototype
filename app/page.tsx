@@ -9,6 +9,12 @@ import CameraWithOrbit from '@/components/CameraWithOrbit'
 import SceneWrapper from '@/components/CanvasWrapper'
 import WebGLScene from '@/components/ThreeJSScene'
 import ThreeSceneWrapper from '@/components/ThreeJSSceneWrapper'
+import '@theatre/core'    
+import studio from '@theatre/studio'
+
+if (typeof window !== 'undefined') {
+  studio.initialize()
+}
 
 
 const mockGPS = { lat: 40.7128, lon: -74.006 }

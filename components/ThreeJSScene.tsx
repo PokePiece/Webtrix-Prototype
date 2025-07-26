@@ -2,25 +2,29 @@
 
 import { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Html, OrbitControls } from "@react-three/drei";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { fetchBuildingData } from "@/lib/fetchBuildings";
-import { useThree } from "@react-three/fiber";
-import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import { PerspectiveCamera } from "three";
-import { gpsToXY } from "@/lib/geo";
-import { Vector3 } from "three";
 import Avatar from "./3DAvatar";
-import Buildings from "./Buildings";
-import NewBuildings from "./NewBuildings";
-import NewestBuildings from "./NewestBuildings";
-import OrbitCameraControls from "./OrbitCameraControls";
 import ComplexBuildings from "./ComplexBuildings";
 import RiftInstance from "./RiftInstance";
-import TheRiftInstance from "./RiftInstance";
 import Link from "next/link";
 import ThirdPersonCamera from "./ThirdPersonCamera";
+import FreeCam from "./FreeCam";
+import studio from '@theatre/studio'
+import { getProject } from '@theatre/core'
+import { editable } from '@theatre/r3f'
+import { SheetProvider } from '@theatre/r3f'
+import SurAvatar from "./SurAvatar";
+import ChatOverlay from "./ChatOverlay";
+
+
+// only run once
+if (typeof window !== 'undefined') studio.initialize()
+
+const sheet = getProject('My Project').sheet('Scene')
+
 
 
 function gpsToXZ(lat: number, lon: number): [number, number] {
@@ -58,7 +62,29 @@ export default function ThreeScene() {
     const [selectedBuilding, setSelectedBuilding] = useState<ComplexBuilding | null>(null)
     const [avatarPos, setAvatarPos] = useState<any>([0, 0, 0]);
     const avatarRef = useRef<THREE.Group | null>(null)
-    const [controlMode, setControlMode] = useState<'avatar' | 'freecam'>('avatar')
+    const [controlMode, setControlMode] = useState<'avatar' | 'freecam' | 'freehidden'>('avatar')
+    const [isChatting, setIsChatting] = useState(false)
+    const [chatActive, setChatActive] = useState(false)
+
+
+    useEffect(() => {
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === 'x') {
+                setControlMode('avatar')
+            } else if (e.key === 'Escape') {
+                setControlMode('freecam')
+            } else if (e.key === 'Tab') {
+                e.preventDefault()
+                setControlMode('freehidden')
+            } else if (e.key === 'c' && !isChatting) {
+                setChatActive(prev => !prev)
+            }
+        }
+
+        window.addEventListener('keydown', handleKey)
+        return () => window.removeEventListener('keydown', handleKey)
+    }, [isChatting])
+
 
 
 
@@ -77,26 +103,12 @@ export default function ThreeScene() {
     }, [])
 
 
-
-    /*
-        useEffect(() => {
-            fetchBuildingData().then((data) => {
-                setBuildings(
-                    data.buildings.map(b => ({
-                        coords: b.coords,
-                        height: b.height ?? 10 // or random / derived later
-                    }))
-                );
-            });
-        }, []);
-    */
-
-
     return (
 
 
 
         <>
+
             <Canvas
                 style={{ background: 'lightBlue' }}
                 onCreated={({ scene }) => {
@@ -104,35 +116,52 @@ export default function ThreeScene() {
 
                 }}
             >
-                <ambientLight intensity={0.5} />
-                <directionalLight position={[10, 10, 10]} />
-                <ThirdPersonCamera avatarRef={avatarRef} />
-
-                <ComplexBuildings buildingData={buildings} onSelect={setSelectedBuilding} />
+                <SheetProvider sheet={sheet}>
+                    <ambientLight intensity={0.5} />
+                    <directionalLight position={[10, 10, 10]} />
 
 
-                <Avatar
-                    ref={avatarRef} // <- pass ref here!
-                    position={avatarPos}
-                    setAvatarPos={setAvatarPos}
-                />
-                {/* Ground plane */}
-                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-                    <planeGeometry args={[1800, 1300]} />
-                    <meshStandardMaterial color="darkgrey" />
-                </mesh>
-                <Html position={new THREE.Vector3(15, 20, 50).clone().setY(35)} center>
-                    <Link href='/webmatrix'>
-                        🔗 Open Webspace
-                    </Link>
-                </Html>
-                <RiftInstance
-                    center={new THREE.Vector3(15, 20, 50)}
-                    height={20}
-                    offset={new THREE.Vector3(0, 20, 0)}
-                />
+                    <ComplexBuildings buildingData={buildings} onSelect={setSelectedBuilding} />
 
+                    {(controlMode === 'freecam' || controlMode === 'freehidden') && <FreeCam />}
+
+                    {(controlMode === 'avatar' || controlMode === 'freecam') && (
+                        <>
+                            {controlMode === 'avatar' && <ThirdPersonCamera avatarRef={avatarRef} />}
+                            <editable.group theatreKey="AvatarRoot1">
+                                <Avatar
+                                    ref={avatarRef}
+                                    position={avatarPos}
+                                    setAvatarPos={setAvatarPos}
+                                    active={controlMode === 'avatar' && !isChatting}
+                                />
+                            </editable.group>
+                        </>
+                    )}
+                    <SurAvatar position={[0, 0, -10]} active={false} />
+                    {/* Ground plane */}
+                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+                        <planeGeometry args={[1800, 1300]} />
+                        <meshStandardMaterial color="darkgrey" />
+                    </mesh>
+
+                    <Html position={new THREE.Vector3(15, 20, 50).clone().setY(35)} center>
+                        <Link href='/webmatrix'>
+                            🔗 Open Webspace
+                        </Link>
+                    </Html>
+                    <RiftInstance
+                        center={new THREE.Vector3(15, 20, 50)}
+                        height={20}
+                        offset={new THREE.Vector3(0, 20, 0)}
+                    />
+                </SheetProvider>
             </Canvas>
+            {chatActive && (
+                <ChatOverlay isChatting={isChatting} setIsChatting={setIsChatting} />
+            )}
+
+
             {selectedBuilding && (
                 <div className="absolute top-4 left-4 bg-white text-black p-4 rounded shadow z-50">
                     <p><strong>Name:</strong> {selectedBuilding.name ?? "—"}</p>
@@ -175,33 +204,3 @@ export default function ThreeScene() {
     );
 }
 
-
-//Replace buildings with this for full geometry
-/*
-  {buildings.map((footprint, i) => {
-                const shape = new THREE.Shape();
-                footprint.forEach(([lon, lat], idx) => {
-                    const [x, y] = gpsToXY(lat, lon);
-                    if (idx === 0) shape.moveTo(x, y);
-                    else shape.lineTo(x, y);
-                });
-
-                const geometry = new THREE.ExtrudeGeometry(shape, { depth: 30, bevelEnabled: false });
-
-                return (
-                    <mesh
-                        key={i}
-                        geometry={geometry}
-                        rotation-x={-Math.PI / 2} // rotate -90° around X axis
-                    >
-                        <meshStandardMaterial color="gray" />
-                    </mesh>
-                );
-            })}
-
-
-
-*/
-
-//Or this for simplified
-//<Buildings buildingData={buildings} />
