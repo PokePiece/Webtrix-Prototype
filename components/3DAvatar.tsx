@@ -1,12 +1,16 @@
 import React, { forwardRef, useEffect, useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
+import FloatingText from './FloatingText'
 
 const Avatar = forwardRef<THREE.Group, {
   position: [number, number, number]
   setAvatarPos: (pos: [number, number, number]) => void
   active: boolean
-}>(({ position, setAvatarPos, active }, ref) => {
+  text: string | null
+  capsuleRef: React.RefObject<THREE.Mesh | null>
+
+}>(({ position, setAvatarPos, active, text, capsuleRef }, ref) => {
 
 
   const keys = useRef({ w: false, a: false, s: false, d: false })
@@ -16,13 +20,16 @@ const Avatar = forwardRef<THREE.Group, {
   const [lastSpokenText, setLastSpokenText] = useState('')
   const [showBubble, setShowBubble] = useState(false)
 
+ 
+
+
   useEffect(() => {
-  if (lastSpokenText) {
-    setShowBubble(true)
-    const timeout = setTimeout(() => setShowBubble(false), 3000)
-    return () => clearTimeout(timeout)
-  }
-}, [lastSpokenText])
+    if (lastSpokenText) {
+      setShowBubble(true)
+      const timeout = setTimeout(() => setShowBubble(false), 3000)
+      return () => clearTimeout(timeout)
+    }
+  }, [lastSpokenText])
 
 
 
@@ -77,14 +84,16 @@ const Avatar = forwardRef<THREE.Group, {
 
   return (
     <group ref={groupRef} scale={[5, 5, 5]} position={position}>
-      <mesh position={[0, 1, 0]}>
+      <mesh ref={capsuleRef} position={[0, 1, 0]}>
         <capsuleGeometry args={[0.5, 1.5, 4, 8]} />
         <meshStandardMaterial color="orange" />
       </mesh>
+
       <mesh position={[0, 2.3, 0]}>
         <sphereGeometry args={[0.5, 16, 16]} />
         <meshStandardMaterial color="orange" />
       </mesh>
+      {text && <FloatingText text={text} offsetY={0} />}
     </group>
   )
 })

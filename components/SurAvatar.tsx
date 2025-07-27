@@ -1,12 +1,14 @@
 import React, { forwardRef, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
 import * as THREE from 'three'
+import FloatingText from './FloatingText'
 
 const SurAvatar = forwardRef<THREE.Group, {
   position: [number, number, number]
   active: boolean
   onClick?: (e: React.MouseEvent) => void
-}>(({ position, active, onClick }, ref) => {
+  text: string | null
+}>(({ position, active, onClick, text }, ref) => {
   const internalRef = useRef<THREE.Group>(null)
   const groupRef = (ref as React.RefObject<THREE.Group>) || internalRef
 
@@ -28,6 +30,7 @@ const SurAvatar = forwardRef<THREE.Group, {
         <sphereGeometry args={[0.5, 16, 16]} />
         <meshStandardMaterial color="#ffbb66" />
       </mesh>
+      {text && <FloatingText text={text} offsetY={0} />}
     </group>
   )
 })

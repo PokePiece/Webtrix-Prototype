@@ -82,9 +82,9 @@ export default function ComplexBuildings({
                 height={height}
                 offset={new THREE.Vector3(0, 20, 0)}
               />
-              <Html position={center.clone().setY(height + 12)} center>
-                <a href={webspace} target="_blank" rel="noopener noreferrer">
-                  🔗 Open Webspace
+              <Html position={center.clone().setY(height + 17)} center>
+                <a href={webspace} rel="noopener noreferrer">
+                  ⚫ Enter Webspace
                 </a>
               </Html>
             </group>

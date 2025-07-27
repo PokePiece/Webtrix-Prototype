@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Avatar from './Avatar'
-import CameraWithOrbit from './CameraWithOrbit'
+import CameraWithOrbit from './dated/CameraWithOrbit'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import ThreeScene from './ThreeJSScene';

@@ -1,29 +1,38 @@
 // components/ChatOverlay.tsx
 import { Html } from '@react-three/drei'
 import React, { useState } from 'react'
-import { controlsEnabledRef } from './ThirdPersonCamera'
+//import { controlsEnabledRef } from './ThirdPersonCamera'
 import { fetchChatResponse } from '@/lib/fetchChatResponse'
 
 type ChatOverlayProps = {
     isChatting: boolean
     setIsChatting: (value: boolean) => void
+    onUserMessage: (msg: any) => void
+    onAiMessage: (msg: any) => void
 }
 
 
-export default function ChatOverlay({ isChatting, setIsChatting }: ChatOverlayProps) {
+export default function ChatOverlay({ isChatting, setIsChatting, onUserMessage, onAiMessage }: ChatOverlayProps) {
     const [messages, setMessages] = useState<string[]>([])
 
     const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             const inputValue = e.currentTarget.value.trim()
             if (inputValue) {
-                setMessages((prev) => [...prev, `User: ${inputValue}`])
                 e.currentTarget.value = ''
-
-                const reply = await fetchChatResponse(inputValue)
-                setMessages((prev) => [...prev, `Sur: ${reply}`])
+                await handleSend(inputValue)
             }
         }
+    }
+
+
+    const handleSend = async (text: string) => {
+        setMessages(prev => [...prev, `User: ${text}`])
+        onUserMessage(text)
+
+        const response = await fetchChatResponse(text)
+        setMessages(prev => [...prev, `Sur: ${response}`])
+        onAiMessage(response)
     }
 
 

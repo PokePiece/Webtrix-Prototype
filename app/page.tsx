@@ -3,11 +3,6 @@
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { useState } from 'react'
-import Avatar from '@/components/Avatar'
-import CameraFollow from '@/components/CameraFollow'
-import CameraWithOrbit from '@/components/CameraWithOrbit'
-import SceneWrapper from '@/components/CanvasWrapper'
-import WebGLScene from '@/components/ThreeJSScene'
 import ThreeSceneWrapper from '@/components/ThreeJSSceneWrapper'
 import '@theatre/core'    
 import studio from '@theatre/studio'
@@ -48,8 +43,8 @@ export default function Page() {
   ]
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen mt-5 bg-white text-black">
-      <h1 className="text-3xl mb-6">Webtrix World</h1>
+    <main className="flex flex-col items-center justify-center min-h-screen mt-0 bg-white text-black">
+      <h1 className="text-3xl mb-0"></h1>
       {/*<SceneWrapper />*/}
       {/*<WebGLScene />*/}
       <ThreeSceneWrapper />

@@ -158,7 +158,7 @@ export default function ThreeScene() {
                     <ambientLight intensity={0.5} />
                     <directionalLight position={[10, 10, 10]} />
 
-                    <WebtrixEntry />
+                    <WebtrixEntry capsuleRef={capsuleRef} />
 
                     <ComplexBuildings buildingData={buildings} onSelect={setSelectedBuilding} />
 

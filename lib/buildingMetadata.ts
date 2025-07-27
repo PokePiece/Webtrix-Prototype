@@ -12,8 +12,8 @@ export const buildingMetadata: Record<number, {
   },
   1147771471: {
     name: "Liberty Apartments",
-    website: "https://dilloncarey.com",
-    webspace: "https://dilloncarey.com" // example
+    website: "http://localhost:3001",
+    webspace: "http://localhost:3001" // example
   },
   995054717: {
     webspace: "https://google.com"
