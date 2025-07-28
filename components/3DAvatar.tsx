@@ -84,12 +84,12 @@ const Avatar = forwardRef<THREE.Group, {
 
   return (
     <group ref={groupRef} scale={[5, 5, 5]} position={position}>
-      <mesh ref={capsuleRef} position={[0, 1, 0]}>
+      <mesh ref={capsuleRef} position={[0, 1.25, 0]}>
         <capsuleGeometry args={[0.5, 1.5, 4, 8]} />
         <meshStandardMaterial color="orange" />
       </mesh>
 
-      <mesh position={[0, 2.3, 0]}>
+      <mesh position={[0, 2.55, 0]}>
         <sphereGeometry args={[0.5, 16, 16]} />
         <meshStandardMaterial color="orange" />
       </mesh>

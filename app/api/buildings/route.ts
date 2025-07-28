@@ -6,6 +6,18 @@ export async function GET() {
     [out:json];
     (
       way["building"](40.7621,-111.8987,40.7691,-111.8830);
+      node["natural"="tree"](40.7621,-111.8987,40.7691,-111.8830);
+      way["natural"="water"](40.7621,-111.8987,40.7691,-111.8830);
+      way["landuse"~"grass|forest"](40.7621,-111.8987,40.7691,-111.8830);
+      way["highway"~"footway|path|pedestrian"](40.7621,-111.8987,40.7691,-111.8830);
+      node["amenity"="bench"](40.7621,-111.8987,40.7691,-111.8830);
+      node["highway"="street_lamp"](40.7621,-111.8987,40.7691,-111.8830);
+      node["emergency"="fire_hydrant"](40.7621,-111.8987,40.7691,-111.8830);
+      way["shop"](40.7621,-111.8987,40.7691,-111.8830);
+      way["barrier"~"fence|hedge"](40.7621,-111.8987,40.7691,-111.8830);
+      way["leisure"~"park|playground|pitch"](40.7621,-111.8987,40.7691,-111.8830);
+      way["waterway"](40.7621,-111.8987,40.7691,-111.8830);
+      node["highway"="bus_stop"](40.7621,-111.8987,40.7691,-111.8830);
     );
     out body;
     >;

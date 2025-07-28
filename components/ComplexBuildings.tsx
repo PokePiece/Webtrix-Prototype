@@ -36,7 +36,20 @@ type ComplexBuilding = {
   webspace?: string
 }
 
+const matColorGenerator = () => {
 
+  let materialColor;
+
+  let randomNumber = Math.floor(Math.random() * 10)
+
+  if(randomNumber < 3) materialColor = 'lightBlue'
+  else if(randomNumber < 6 ) materialColor = 'blue'
+  else if(randomNumber < 8) materialColor = 'cyan'
+  else if(randomNumber < 10) materialColor = 'indigo'
+
+  return materialColor
+  
+}
 
 export default function ComplexBuildings({
   buildingData,
@@ -63,6 +76,7 @@ export default function ComplexBuildings({
       geometry.boundingBox?.getCenter(center)
 
 
+
       return (
         <group key={i}>
           <mesh
@@ -72,7 +86,7 @@ export default function ComplexBuildings({
               onSelect({ coords, height, id, name, type, amenity, address, wikidata, wikipedia, website, webspace })
             }}
           >
-            <meshStandardMaterial color="lightblue" />
+            <meshStandardMaterial color={matColorGenerator()} />
           </mesh>
 
           {webspace && (

@@ -19,6 +19,8 @@ import { SheetProvider } from '@theatre/r3f'
 import SurAvatar from "./SurAvatar";
 import ChatOverlay from "./ChatOverlay";
 import WebtrixEntry from "./WebtrixEntry";
+import { Physics, RigidBody } from "@react-three/rapier";
+import Details from "./Details";
 
 
 // only run once
@@ -61,7 +63,7 @@ type ComplexBuilding = {
 export default function ThreeScene() {
     const [buildings, setBuildings] = useState<ComplexBuilding[]>([])
     const [selectedBuilding, setSelectedBuilding] = useState<ComplexBuilding | null>(null)
-    const [avatarPos, setAvatarPos] = useState<any>([0, 0, 0]);
+    const [avatarPos, setAvatarPos] = useState<any>([0, 2, 0]);
     const avatarRef = useRef<THREE.Group | null>(null)
     const [controlMode, setControlMode] = useState<'avatar' | 'freecam' | 'freehidden'>('avatar')
     const [isChatting, setIsChatting] = useState(false)
@@ -154,57 +156,64 @@ export default function ThreeScene() {
 
                 }}
             >
-                <SheetProvider sheet={sheet}>
-                    <ambientLight intensity={0.5} />
-                    <directionalLight position={[10, 10, 10]} />
+                <Physics>
+                    <SheetProvider sheet={sheet}>
+                        <ambientLight intensity={0.5} />
+                        <directionalLight position={[10, 10, 10]} />
 
-                    <WebtrixEntry />
+                        <WebtrixEntry />
+                        {/*<Details onSelect={() => {}} />*/}
+                        <ComplexBuildings buildingData={buildings} onSelect={setSelectedBuilding} />
 
-                    <ComplexBuildings buildingData={buildings} onSelect={setSelectedBuilding} />
+                        {(controlMode === 'freecam' || controlMode === 'freehidden') && <FreeCam />}
 
-                    {(controlMode === 'freecam' || controlMode === 'freehidden') && <FreeCam />}
+                        {(controlMode === 'avatar' || controlMode === 'freecam') && (
+                            <>
+                                {controlMode === 'avatar' && <ThirdPersonCamera avatarRef={avatarRef} />}
+                                <editable.group theatreKey="AvatarRoot1">
+                                    
+                                        <Avatar
+                                            ref={avatarRef}
+                                            position={avatarPos}
+                                            setAvatarPos={setAvatarPos}
+                                            active={controlMode === 'avatar' && !isChatting}
+                                            text={avatarSpeech}
+                                            capsuleRef={capsuleRef}
+                                        />
+                                </editable.group>
+                            </>
+                        )}
+                        <RigidBody type='dynamic' colliders='cuboid'>
+                            <SurAvatar
+                                position={surPos}
+                                active={followingSur}
+                                onClick={() => setFollowingSur(!followingSur)}
+                                text={surSpeech}
+                            />
+                        </RigidBody>
+                        <RigidBody>
+                        <SurFollower /></RigidBody>
+                        {/* Ground plane */}
+                        <RigidBody>
+                            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+                                <planeGeometry args={[1800, 1300]} />
+                                <meshStandardMaterial color="darkgrey" />
+                            </mesh>
+                        </RigidBody>
 
-                    {(controlMode === 'avatar' || controlMode === 'freecam') && (
-                        <>
-                            {controlMode === 'avatar' && <ThirdPersonCamera avatarRef={avatarRef} />}
-                            <editable.group theatreKey="AvatarRoot1">
-                                <Avatar
-                                    ref={avatarRef}
-                                    position={avatarPos}
-                                    setAvatarPos={setAvatarPos}
-                                    active={controlMode === 'avatar' && !isChatting}
-                                    text={avatarSpeech}
-                                    capsuleRef={capsuleRef}
-                                />
-                            </editable.group>
-                        </>
-                    )}
-                    <SurAvatar
-                        position={surPos}
-                        active={followingSur}
-                        onClick={() => setFollowingSur(!followingSur)}
-                        text={surSpeech}
-                    />
-                    <SurFollower />
-                    {/* Ground plane */}
-                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-                        <planeGeometry args={[1800, 1300]} />
-                        <meshStandardMaterial color="darkgrey" />
-                    </mesh>
 
-
-
-                    <Html position={new THREE.Vector3(20, 42, 50)}>
-                        <Link href='/webmatrix'>
-                            ⚫ Enter Webspace
-                        </Link>
-                    </Html>
-                    <RiftInstance
-                        center={new THREE.Vector3(15, 20, 50)}
-                        height={20}
-                        offset={new THREE.Vector3(0, 20, 0)}
-                    />
-                </SheetProvider>
+                        <Html position={new THREE.Vector3(20, 42, 50)}>
+                            <Link href='/webmatrix'>
+                                ⚫ Enter Webspace
+                            </Link>
+                        </Html>
+                        <RiftInstance
+                            center={new THREE.Vector3(15, 20, 50)}
+                            height={20}
+                            offset={new THREE.Vector3(0, 20, 0)}
+                        />
+                    </SheetProvider>
+                </Physics>
             </Canvas>
             {chatActive && (
                 <ChatOverlay

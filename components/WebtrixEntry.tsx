@@ -7,9 +7,9 @@ const WebtrixEntry = () => {
     const maxWidth = 20
 
     return (
-        <group position={[-10, 14, 60]} rotation={[0, 1.6, 0]}>
+        <group position={[-10, 25, 60]} rotation={[0, 2.5, 0]}>
             <mesh position={[0, 0, 0]}>
-                {/*<planeGeometry args={[maxWidth * 1.1, fontSize * 4]} /> */}
+                <planeGeometry args={[maxWidth * 1.3, fontSize * 4.5]} />
 
                 <meshBasicMaterial color="gray" opacity={0.6} transparent />
             </mesh>
