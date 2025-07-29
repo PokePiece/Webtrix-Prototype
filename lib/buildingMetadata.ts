@@ -17,5 +17,9 @@ export const buildingMetadata: Record<number, {
   },
   995054717: {
     webspace: "https://google.com"
+  },
+  533001543: {
+    name: "Blackrock Neurotech",
+    website: "https://blackrockneurotech.com/"
   }
 };

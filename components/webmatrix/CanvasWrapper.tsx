@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { Html, OrbitControls } from '@react-three/drei';
 import { Suspense, useEffect, useState } from 'react';
 import ClickableNode from './ClickableNode';
-import RiftInstance from '../RiftInstance';
+import RiftInstance from '../environment/portals/RiftInstance';
 import * as THREE from "three";
 import Link from 'next/link';
 import { Sky } from '@react-three/drei';

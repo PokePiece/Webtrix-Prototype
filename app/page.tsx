@@ -3,7 +3,7 @@
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { useState } from 'react'
-import ThreeSceneWrapper from '@/components/ThreeJSSceneWrapper'
+import ThreeSceneWrapper from '@/components/scene/ThreeJSSceneWrapper'
 import '@theatre/core'    
 import studio from '@theatre/studio'
 
@@ -45,10 +45,22 @@ export default function Page() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen mt-0 bg-white text-black">
       <h1 className="text-3xl mb-0"></h1>
-      {/*<SceneWrapper />*/}
-      {/*<WebGLScene />*/}
       <ThreeSceneWrapper />
+      
     </main>
 
   )
 }
+
+
+/*
+
+ <div className="absolute top-0 left-0 w-full z-10 pointer-events-none">
+                <div className="flex flex-col justify-center items-center mt-10">
+                    <h1 className="text-2xl text-white text-center">Webtrix</h1>
+                    <p className="text-lg text-white text-center">Connecting worlds.</p>
+                </div>
+
+            </div>
+      <div>Hello</div>
+  */

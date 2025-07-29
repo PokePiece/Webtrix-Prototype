@@ -1,5 +1,5 @@
-export async function fetchChatResponse(prompt: string): Promise<string> {
-    const payload = JSON.stringify({ prompt, max_tokens: 1000, tag: 'void_general' });
+export async function fetchChatResponse(prompt: string, user_tag: string): Promise<string> {
+    const payload = JSON.stringify({ prompt, max_tokens: 1000, tag: user_tag });
 
     let ok = false;
     try {

@@ -6,42 +6,38 @@ import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { fetchBuildingData } from "@/lib/fetchBuildings";
 import { useRef } from "react";
-import Avatar from "./3DAvatar";
-import ComplexBuildings from "./environment/ComplexBuildings";
-import RiftInstance from "./RiftInstance";
 import Link from "next/link";
-import ThirdPersonCamera from "./ThirdPersonCamera";
-import FreeCam from "./FreeCam";
 import studio from '@theatre/studio'
 import { getProject } from '@theatre/core'
 import { editable } from '@theatre/r3f'
 import { SheetProvider } from '@theatre/r3f'
-import SurAvatar from "./SurAvatar";
-import ChatOverlay from "./ChatOverlay";
-import WebtrixEntry from "./WebtrixEntry";
 import { Physics, RigidBody } from "@react-three/rapier";
-import Details from "./dated/Details";
-//import Trees from "./Details";
-import Footways from "./environment/Footways";
-import Paths from "./environment/Footways";
-import GrassForest from "./environment/Landuse";
-import Trees from "./environment/Trees";
-import House from "./environment/House";
-import Computer from "./environment/Computer";
-import SCI from "./environment/portals/BlackrockPortal";
-import BlackrockPortal from "./environment/portals/BlackrockPortal";
-import CenterPortal from './environment/portals/CenterPortal'
-import Renevade from "./environment/text/Renevade";
+import WebtrixEntry from "../environment/text/WebtrixEntry";
+import ComplexBuildings from "../environment/key/ComplexBuildings";
+import Trees from "../environment/key/Trees";
+import GrassForest from "../environment/key/Landuse";
+import House from "../environment/key/House";
+import Renevade from "../environment/text/Renevade";
+import Computer from "../environment/key/Computer";
+import BlackrockPortal from "../environment/portals/BlackrockPortal";
+import CenterPortal from "../environment/portals/CenterPortal";
+import ThirdPersonCamera from "./ThirdPersonCamera";
+import SurrealAvatar from "./SurrealAvatar";
+import FreeCam from "./FreeCam";
+import RiftInstance from "../environment/portals/RiftInstance";
+import ChatOverlay from "./ChatOverlay";
+import Footways from "../environment/key/Footways";
+import Avatar from "./3DAvatar";
+import MainOverlay from "./MainOverlay";
+import Houses from "../environment/key/Houses";
+import Chair from "../environment/key/Chair";
 
-// only run once
 if (typeof window !== 'undefined') studio.initialize()
 
 const sheet = getProject('My Project').sheet('Scene')
 
-
-
 function gpsToXZ(lat: number, lon: number): [number, number] {
-    const R = 6371000; // Earth radius meters
+    const R = 6371000; 
     const originLat = 40.7660;
     const originLon = -111.8460;
     const dLat = (lat - originLat) * (Math.PI / 180);
@@ -65,73 +61,63 @@ type ComplexBuilding = {
     webspace?: string
 }
 
-
-
-
-
-
 export default function ThreeScene() {
     const [buildings, setBuildings] = useState<ComplexBuilding[]>([])
     const [selectedBuilding, setSelectedBuilding] = useState<ComplexBuilding | null>(null)
-    const [avatarPos, setAvatarPos] = useState<any>([8, 0, 10]);
-    const avatarRef = useRef<THREE.Group | null>(null)
+    const [avatarPos, setAvatarPos] = useState<any>([14, 0, 9]);
     const [controlMode, setControlMode] = useState<'avatar' | 'freecam' | 'freehidden'>('avatar')
     const [isChatting, setIsChatting] = useState(false)
     const [chatActive, setChatActive] = useState(false)
-    const [followingSur, setFollowingSur] = useState(false);
-    const lastSurPos = useRef<[number, number, number]>([avatarPos[0] - 5, avatarPos[1], avatarPos[2] - 10])
-    const [surPos, setSurPos] = useState<[number, number, number]>([10, 0, 10])
+    const [followingSurreal, setFollowingSurreal] = useState(false);
+    const lastSurrealPos = useRef<[number, number, number]>([avatarPos[0] - 5, avatarPos[1], avatarPos[2] - 10])
+    const [surrealPos, setSurrealPos] = useState<[number, number, number]>([10, 0, 10])
     const [avatarSpeech, setAvatarSpeech] = useState<string | null>(null);
-    const [surSpeech, setSurSpeech] = useState<string | null>(null);
-
+    const [surrealSpeech, setSurrealSpeech] = useState<string | null>(null);
     const [freeCamPos, setFreeCamPos] = useState<THREE.Vector3>(new THREE.Vector3())
-
-
-
-
-
+    const [mainOverlayActive, setMainOverlayActive] = useState<boolean>(false)
 
     const capsuleRef = useRef<THREE.Mesh | null>(null)
+    const avatarRef = useRef<THREE.Group | null>(null)
 
-
-
-
-
-    if (followingSur) {
-        lastSurPos.current = [avatarPos[0], avatarPos[1], avatarPos[2] - 5]
+    if (followingSurreal) {
+        lastSurrealPos.current = [avatarPos[0], avatarPos[1], avatarPos[2] - 5]
     }
 
     useEffect(() => {
-  const handleKey = (e: KeyboardEvent) => {
-    if (e.key === 'x') {
-      setControlMode('avatar')
-    } else if (e.key === 'f') {
-      setControlMode('freecam')
-    } else if (e.key === 'z') {
-      e.preventDefault()
-      setControlMode('freehidden')
-    } else if (e.key === 'c' && !isChatting) {
-      setChatActive(prev => !prev)
-    } else if (e.key.toLowerCase() === 'q' && controlMode === 'freecam') {
-      setAvatarPos([freeCamPos.x, 0, freeCamPos.z])
-      setControlMode('avatar')
-    }
-  }
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key.toLowerCase() === 'x' && !isChatting) {
+                setControlMode('avatar')
+            } else if (e.key.toLowerCase() === 'f' && !isChatting) {
+                setControlMode('freecam')
+            } else if (e.key.toLowerCase() === 'z' && !isChatting) {
+                e.preventDefault()
+                setControlMode('freehidden')
+            } else if (e.key.toLowerCase() === 'c' && !isChatting) {
+                if (!mainOverlayActive) {
+                    setChatActive(prev => !prev)
+                }
+            } else if (e.key.toLowerCase() === 'q' && controlMode === 'freecam') {
+                if (!isChatting) {
+                    setAvatarPos([freeCamPos.x, 0, freeCamPos.z])
+                    setControlMode('avatar')
+                }
+            } else if (e.key.toLowerCase() === 'e') {
+                if (!chatActive && !isChatting) {
+                    setMainOverlayActive(prev => !prev)
+                }
+            }
+        }
 
-  window.addEventListener('keydown', handleKey)
-  return () => window.removeEventListener('keydown', handleKey)
-}, [controlMode, isChatting, freeCamPos, setAvatarPos])
+        window.addEventListener('keydown', handleKey)
+        return () => window.removeEventListener('keydown', handleKey)
+    }, [controlMode, isChatting, freeCamPos, chatActive, setAvatarPos, mainOverlayActive])
 
-
-
-
-/*
-    useEffect(() => {
-        const [x, z] = gpsToXZ(40.7660, -111.8460)
-        setAvatarPos([x, 0, z]);
-    }, []);
-*/
-
+    /*
+        useEffect(() => {
+            const [x, z] = gpsToXZ(40.7660, -111.8460)
+            setAvatarPos([x, 0, z]);
+        }, []);
+    */
 
     useEffect(() => {
         fetchBuildingData().then((res) => {
@@ -139,10 +125,9 @@ export default function ThreeScene() {
         })
     }, [])
 
-
-    function SurFollower() {
+    function SurrealFollower() {
         useFrame(() => {
-            if (!followingSur) return;
+            if (!followingSurreal) return;
 
             const target: [number, number, number] = [
                 avatarPos[0] + 1,
@@ -151,7 +136,7 @@ export default function ThreeScene() {
             ];
             const speed = 0.05;
 
-            setSurPos(([x, y, z]) => [
+            setSurrealPos(([x, y, z]) => [
                 x + (target[0] - x) * speed,
                 y + (target[1] - y) * speed,
                 z + (target[2] - z) * speed,
@@ -161,18 +146,13 @@ export default function ThreeScene() {
         return null;
     }
 
-
     return (
-
-
-
         <>
 
             <Canvas
                 style={{ background: 'lightBlue' }}
                 onCreated={({ scene }) => {
-                    scene.background = new THREE.Color('#05021C'); // light sky blue
-
+                    scene.background = new THREE.Color('#05021C'); 
                 }}
             >
                 <Physics>
@@ -184,15 +164,21 @@ export default function ThreeScene() {
 
                         <ComplexBuildings buildingData={buildings} onSelect={setSelectedBuilding} />
                         <Trees onSelect={() => { }} />
-                        <Paths onSelect={() => { }} />
+                        <Footways onSelect={() => { }} />
                         <GrassForest onSelect={() => { }} />
                         <House />
                         <Renevade />
                         <Computer />
-                        <BlackrockPortal onTeleport={() => setAvatarPos([0,0,5])} />
-                        <CenterPortal onTeleport={() => setAvatarPos([1180,0,1330])} />
+                        <BlackrockPortal onTeleport={() => setAvatarPos([0, 0, 5])} />
+                        <CenterPortal onTeleport={() => setAvatarPos([1180, 0, 1330])} />
+                        <Houses />
+                        <Chair />
 
-                        {(controlMode === 'freecam' || controlMode === 'freehidden') && <FreeCam setCamPos={setFreeCamPos} />}
+                        {(controlMode === 'freecam' || controlMode === 'freehidden') && (
+                            <FreeCam 
+                            isOverlayOn={(chatActive || mainOverlayActive)}
+                            setCamPos={setFreeCamPos} /> 
+                            )}
 
                         {(controlMode === 'avatar' || controlMode === 'freecam') && (
                             <>
@@ -211,15 +197,15 @@ export default function ThreeScene() {
                             </>
                         )}
                         <RigidBody type='dynamic' colliders='cuboid'>
-                            <SurAvatar
-                                position={surPos}
-                                active={followingSur}
-                                onClick={() => setFollowingSur(!followingSur)}
-                                text={surSpeech}
+                            <SurrealAvatar
+                                position={surrealPos}
+                                active={followingSurreal}
+                                onClick={() => setFollowingSurreal(!followingSurreal)}
+                                text={surrealSpeech}
                             />
                         </RigidBody>
                         <RigidBody>
-                            <SurFollower /></RigidBody>
+                            <SurrealFollower /></RigidBody>
                         {/* Ground plane */}
                         <RigidBody>
                             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
@@ -252,6 +238,20 @@ export default function ThreeScene() {
                     </SheetProvider>
                 </Physics>
             </Canvas>
+            {mainOverlayActive && (
+                <MainOverlay
+                    isChatting={isChatting}
+                    setIsChatting={setIsChatting}
+                    onUserMessage={(msg) => {
+                        setAvatarSpeech(msg);
+                        setTimeout(() => setAvatarSpeech(null), 3000);
+                    }}
+                    onAiMessage={(msg) => {
+                        setSurrealSpeech(msg);
+                        setTimeout(() => setSurrealSpeech(null), 3000);
+                    }}
+                />
+            )}
             {chatActive && (
                 <ChatOverlay
                     isChatting={isChatting}
@@ -261,8 +261,8 @@ export default function ThreeScene() {
                         setTimeout(() => setAvatarSpeech(null), 3000);
                     }}
                     onAiMessage={(msg) => {
-                        setSurSpeech(msg);
-                        setTimeout(() => setSurSpeech(null), 3000);
+                        setSurrealSpeech(msg);
+                        setTimeout(() => setSurrealSpeech(null), 3000);
                     }}
                 />
             )}
@@ -278,6 +278,7 @@ export default function ThreeScene() {
                     <p><strong>Address:</strong> {selectedBuilding.address ?? "—"}</p>
                     <p><strong>Wikipedia:</strong> {selectedBuilding.wikipedia ?? "—"}</p>
                     <p><strong>Wikidata:</strong> {selectedBuilding.wikidata ?? "—"}</p>
+                    <p><strong>Website:</strong> {selectedBuilding.website ?? "—"}</p>
                     <p>
                         <strong>Webspace:</strong>{" "}
                         {selectedBuilding.webspace ? (
@@ -302,10 +303,6 @@ export default function ThreeScene() {
                     </button>
                 </div>
             )}
-
-
-
-
         </>
     );
 }

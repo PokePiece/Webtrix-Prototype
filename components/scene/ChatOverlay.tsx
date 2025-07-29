@@ -1,7 +1,4 @@
-// components/ChatOverlay.tsx
-import { Html } from '@react-three/drei'
 import React, { useState } from 'react'
-//import { controlsEnabledRef } from './ThirdPersonCamera'
 import { fetchChatResponse } from '@/lib/fetchChatResponse'
 
 type ChatOverlayProps = {
@@ -30,8 +27,8 @@ export default function ChatOverlay({ isChatting, setIsChatting, onUserMessage, 
         setMessages(prev => [...prev, `User: ${text}`])
         onUserMessage(text)
 
-        const response = await fetchChatResponse(text)
-        setMessages(prev => [...prev, `Sur: ${response}`])
+        const response = await fetchChatResponse(text, 'webtrix_general')
+        setMessages(prev => [...prev, `Surreal: ${response}`])
         onAiMessage(response)
     }
 

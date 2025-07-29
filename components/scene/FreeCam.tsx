@@ -4,7 +4,7 @@ import * as THREE from 'three'
 
 
 
-export default function FreeCam({ setCamPos }: { setCamPos: (pos: THREE.Vector3) => void }) {
+export default function FreeCam({ setCamPos, isOverlayOn }: { setCamPos: (pos: THREE.Vector3) => void, isOverlayOn: boolean }) {
     const { camera, gl, scene } = useThree()
     
     const velocity = useRef(new THREE.Vector3())
@@ -51,6 +51,8 @@ export default function FreeCam({ setCamPos }: { setCamPos: (pos: THREE.Vector3)
 
             if (target.closest('a, button, [data-ui]')) return;
 
+            if (isOverlayOn) return
+
             if (!isPointerLocked.current) {
                 gl.domElement.requestPointerLock();
                 return;
@@ -85,7 +87,7 @@ export default function FreeCam({ setCamPos }: { setCamPos: (pos: THREE.Vector3)
             window.removeEventListener('click', handleClick)
             document.removeEventListener('pointerlockchange', handlePointerLockChange)
         }
-    }, [gl.domElement])
+    }, [gl.domElement, isOverlayOn])
 
     useFrame((_, delta) => {
         setCamPos(camera.position.clone())

@@ -25,7 +25,7 @@ export default function CenterPortal({onTeleport}:{onTeleport: () => void}) {
                 anchorY='middle'
                 fontSize={1}
             >
-                WebPortal to Blackrock
+                WebPortal to Blackrock Neurotech
             </Text>
         </>
     )

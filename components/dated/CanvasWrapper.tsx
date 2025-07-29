@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react'
-import Avatar from './dated/Avatar'
-import CameraWithOrbit from './dated/CameraWithOrbit'
+import Avatar from './Avatar'
+import CameraWithOrbit from './CameraWithOrbit'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 // import other scene elements as needed

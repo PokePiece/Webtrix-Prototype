@@ -1,9 +1,9 @@
 import React, { forwardRef, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import FloatingText from './FloatingText'
+import FloatingText from '../environment/text/FloatingText'
 
-const SurAvatar = forwardRef<THREE.Group, {
+const SurrealAvatar = forwardRef<THREE.Group, {
   position: [number, number, number]
   active: boolean
   onClick?: (e: React.MouseEvent) => void
@@ -35,4 +35,4 @@ const SurAvatar = forwardRef<THREE.Group, {
   )
 })
 
-export default SurAvatar
+export default SurrealAvatar

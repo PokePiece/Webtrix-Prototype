@@ -1,7 +1,7 @@
 import React, { forwardRef, useEffect, useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import FloatingText from './FloatingText'
+import FloatingText from '../environment/text/FloatingText'
 
 const Avatar = forwardRef<THREE.Group, {
   position: [number, number, number]

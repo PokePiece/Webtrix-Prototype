@@ -1,7 +1,7 @@
 // ComplexBuildings.tsx
 import { useMemo, useState } from 'react'
 import * as THREE from 'three'
-import RiftInstance from '../RiftInstance'
+import RiftInstance from '../portals/RiftInstance'
 import { Html } from '@react-three/drei';
 
 type Coord = [number, number]
