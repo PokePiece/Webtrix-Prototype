@@ -90,8 +90,6 @@ export default function Details({ onSelect }: DetailsProps) {
             let color = new THREE.Color(0xaaaaaa)
             let height = 1
 
-            
-
             // Simple procedural geometry rules based on type and tags
             if (type === "node") {
                 // Nodes: represent as spheres (like trees, lamps, benches)

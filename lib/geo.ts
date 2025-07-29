@@ -1,4 +1,6 @@
-const ORIGIN = { lat: 40.765, lon: -111.89 }; // Set to your area
+
+export const ORIGIN = { lat: 40.7660, lon: -111.8460 };
+
 
 export function gpsToXY(lat: number, lon: number): [number, number] {
   const R = 6371000; // Earth radius in meters

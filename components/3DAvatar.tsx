@@ -57,7 +57,7 @@ const Avatar = forwardRef<THREE.Group, {
     if (!groupRef.current || !active) return
     if (!groupRef.current) return
 
-    const speed = 25
+    const speed = 5
     const move = new THREE.Vector3()
 
     // Get camera forward and right vectors projected onto XZ plane
@@ -83,7 +83,7 @@ const Avatar = forwardRef<THREE.Group, {
   })
 
   return (
-    <group ref={groupRef} scale={[5, 5, 5]} position={position}>
+    <group ref={groupRef} scale={[0.7, 0.7, 0.7]} position={position}>
       <mesh ref={capsuleRef} position={[0, 1.25, 0]}>
         <capsuleGeometry args={[0.5, 1.5, 4, 8]} />
         <meshStandardMaterial color="orange" />

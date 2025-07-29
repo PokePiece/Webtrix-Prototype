@@ -18,17 +18,17 @@ const SurAvatar = forwardRef<THREE.Group, {
   return (
     <group
       ref={groupRef}
-      scale={[5, 5, 5]}
+      scale={[0.7, 0.7, 0.7]}
       position={position}
       onClick={onClick}
     >
       <mesh position={[0, 1, 0]}>
         <capsuleGeometry args={[0.5, 1.5, 4, 8]} />
-        <meshStandardMaterial color="#ffbb66" />
+        <meshStandardMaterial color="crimson" />
       </mesh>
       <mesh position={[0, 2.3, 0]}>
         <sphereGeometry args={[0.5, 16, 16]} />
-        <meshStandardMaterial color="#ffbb66" />
+        <meshStandardMaterial color="crimson" />
       </mesh>
       {text && <FloatingText text={text} offsetY={0} />}
     </group>

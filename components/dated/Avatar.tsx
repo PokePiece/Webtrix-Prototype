@@ -47,7 +47,7 @@ export default function Avatar({ position, setPosition }: AvatarProps) {
   })
 
   return (
-    <group ref={ref} scale={[2, 2, 2]}>
+    <group ref={ref} scale={[2, , 2]}>
       <mesh position={[0, 1, 0]}>
         <capsuleGeometry args={[0.5, 1.5, 4, 8]} />
         <meshStandardMaterial color="orange" />

@@ -19,7 +19,7 @@ export default function ThirdPersonCamera({ avatarRef }: { avatarRef: React.RefO
     pointer.current.y -= event.movementY * 0.005
 
     theta.current = pointer.current.x
-    phi.current = THREE.MathUtils.clamp(pointer.current.y, 0.01, Math.PI - 0.01)
+    phi.current = THREE.MathUtils.clamp(pointer.current.y, 0.01, Math.PI - 1.6)
     //phi.current = THREE.MathUtils.clamp(pointer.current.y, 0.1, Math.PI / 2.2)
   }
 
@@ -33,7 +33,7 @@ export default function ThirdPersonCamera({ avatarRef }: { avatarRef: React.RefO
     if (!avatarRef.current) return
 
     const offset = new THREE.Vector3()
-    const radius = 50
+    const radius = 5
 
     offset.x = radius * Math.sin(phi.current) * Math.sin(theta.current)
     offset.y = radius * Math.cos(phi.current)

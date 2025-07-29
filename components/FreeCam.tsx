@@ -4,8 +4,9 @@ import * as THREE from 'three'
 
 
 
-export default function FreeCam() {
+export default function FreeCam({ setCamPos }: { setCamPos: (pos: THREE.Vector3) => void }) {
     const { camera, gl, scene } = useThree()
+    
     const velocity = useRef(new THREE.Vector3())
     const direction = useRef(new THREE.Vector3())
     const keys = useRef<Record<string, boolean>>({})
@@ -14,11 +15,11 @@ export default function FreeCam() {
     const isPointerLocked = useRef(false)
 
     const raycaster = useRef(new THREE.Raycaster())
-    const pointer = new THREE.Vector2(0, 0) // center of screen
+    const pointer = new THREE.Vector2(0, 0) 
 
 
     const sensitivity = 0.002
-    const acceleration = 2500
+    const acceleration = 1500
     const friction = 10
 
     useEffect(() => {
@@ -48,7 +49,6 @@ export default function FreeCam() {
         const handleClick = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
 
-            // Allow UI elements to handle their own clicks
             if (target.closest('a, button, [data-ui]')) return;
 
             if (!isPointerLocked.current) {
@@ -56,23 +56,17 @@ export default function FreeCam() {
                 return;
             }
 
-            // Ensure pointer is centered for accurate raycasting
-            pointer.set(0, 0); // center of screen in NDC (-1 to 1)
+            pointer.set(0, 0); 
 
-            // Setup ray from camera through pointer
             raycaster.current.setFromCamera(pointer, camera);
 
-            // Raycast against scene objects
             const intersects = raycaster.current.intersectObjects(scene.children, true);
 
             if (intersects.length > 0) {
                 const hit = intersects[0].object;
                 console.log('Clicked object:', hit.name || hit);
-                // Add custom interaction logic here
             }
         };
-
-
 
         const handlePointerLockChange = () => {
             isPointerLocked.current = document.pointerLockElement === gl.domElement
@@ -94,13 +88,12 @@ export default function FreeCam() {
     }, [gl.domElement])
 
     useFrame((_, delta) => {
-        // Orientation
+        setCamPos(camera.position.clone())
         camera.rotation.order = 'YXZ'
         camera.rotation.y = yaw.current
         camera.rotation.x = pitch.current
         camera.rotation.z = 0
 
-        // Movement direction
         direction.current.set(0, 0, 0)
         if (keys.current['w']) direction.current.z -= 1
         if (keys.current['s']) direction.current.z += 1
@@ -111,18 +104,14 @@ export default function FreeCam() {
 
         if (direction.current.lengthSq() > 0) direction.current.normalize()
 
-        // Convert direction to world space
         const worldDirection = direction.current.clone()
             .applyEuler(camera.rotation)
             .multiplyScalar(acceleration * delta)
 
-        // Apply velocity
         velocity.current.add(worldDirection)
 
-        // Apply friction
         velocity.current.multiplyScalar(1 - Math.min(friction * delta, 1))
 
-        // Move camera
         camera.position.add(velocity.current.clone().multiplyScalar(delta))
     })
 

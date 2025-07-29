@@ -1,15 +1,16 @@
 // ComplexBuildings.tsx
 import { useMemo, useState } from 'react'
 import * as THREE from 'three'
-import RiftInstance from './RiftInstance'
+import RiftInstance from '../RiftInstance'
 import { Html } from '@react-three/drei';
 
 type Coord = [number, number]
 
+
 function gpsToXY(lat: number, lon: number): [number, number] {
   const R = 6371000
-  const originLat = 40.765
-  const originLon = -111.89
+  const originLat = 40.7660
+  const originLon = -111.8460
   const dLat = (lat - originLat) * (Math.PI / 180)
   const dLon = (lon - originLon) * (Math.PI / 180)
   const x = dLon * R * Math.cos(originLat * Math.PI / 180)

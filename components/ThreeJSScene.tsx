@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { fetchBuildingData } from "@/lib/fetchBuildings";
 import { useRef } from "react";
 import Avatar from "./3DAvatar";
-import ComplexBuildings from "./ComplexBuildings";
+import ComplexBuildings from "./environment/ComplexBuildings";
 import RiftInstance from "./RiftInstance";
 import Link from "next/link";
 import ThirdPersonCamera from "./ThirdPersonCamera";
@@ -20,8 +20,18 @@ import SurAvatar from "./SurAvatar";
 import ChatOverlay from "./ChatOverlay";
 import WebtrixEntry from "./WebtrixEntry";
 import { Physics, RigidBody } from "@react-three/rapier";
-import Details from "./Details";
-
+import Details from "./dated/Details";
+//import Trees from "./Details";
+import Footways from "./environment/Footways";
+import Paths from "./environment/Footways";
+import GrassForest from "./environment/Landuse";
+import Trees from "./environment/Trees";
+import House from "./environment/House";
+import Computer from "./environment/Computer";
+import SCI from "./environment/portals/BlackrockPortal";
+import BlackrockPortal from "./environment/portals/BlackrockPortal";
+import CenterPortal from './environment/portals/CenterPortal'
+import Renevade from "./environment/text/Renevade";
 
 // only run once
 if (typeof window !== 'undefined') studio.initialize()
@@ -32,8 +42,8 @@ const sheet = getProject('My Project').sheet('Scene')
 
 function gpsToXZ(lat: number, lon: number): [number, number] {
     const R = 6371000; // Earth radius meters
-    const originLat = 40.765;
-    const originLon = -111.89;
+    const originLat = 40.7660;
+    const originLon = -111.8460;
     const dLat = (lat - originLat) * (Math.PI / 180);
     const dLon = (lon - originLon) * (Math.PI / 180);
     const x = dLon * R * Math.cos(originLat * Math.PI / 180);
@@ -63,16 +73,22 @@ type ComplexBuilding = {
 export default function ThreeScene() {
     const [buildings, setBuildings] = useState<ComplexBuilding[]>([])
     const [selectedBuilding, setSelectedBuilding] = useState<ComplexBuilding | null>(null)
-    const [avatarPos, setAvatarPos] = useState<any>([0, 2, 0]);
+    const [avatarPos, setAvatarPos] = useState<any>([8, 0, 10]);
     const avatarRef = useRef<THREE.Group | null>(null)
     const [controlMode, setControlMode] = useState<'avatar' | 'freecam' | 'freehidden'>('avatar')
     const [isChatting, setIsChatting] = useState(false)
     const [chatActive, setChatActive] = useState(false)
     const [followingSur, setFollowingSur] = useState(false);
     const lastSurPos = useRef<[number, number, number]>([avatarPos[0] - 5, avatarPos[1], avatarPos[2] - 10])
-    const [surPos, setSurPos] = useState<[number, number, number]>([0, 0, -10])
+    const [surPos, setSurPos] = useState<[number, number, number]>([10, 0, 10])
     const [avatarSpeech, setAvatarSpeech] = useState<string | null>(null);
     const [surSpeech, setSurSpeech] = useState<string | null>(null);
+
+    const [freeCamPos, setFreeCamPos] = useState<THREE.Vector3>(new THREE.Vector3())
+
+
+
+
 
 
     const capsuleRef = useRef<THREE.Mesh | null>(null)
@@ -86,32 +102,35 @@ export default function ThreeScene() {
     }
 
     useEffect(() => {
-        const handleKey = (e: KeyboardEvent) => {
-            if (e.key === 'x') {
-                setControlMode('avatar')
-            } else if (e.key === 'Escape') {
-                setControlMode('freecam')
-            } else if (e.key === 'Tab') {
-                e.preventDefault()
-                setControlMode('freehidden')
-            } else if (e.key === 'c' && !isChatting) {
-                setChatActive(prev => !prev)
-            }
-        }
+  const handleKey = (e: KeyboardEvent) => {
+    if (e.key === 'x') {
+      setControlMode('avatar')
+    } else if (e.key === 'f') {
+      setControlMode('freecam')
+    } else if (e.key === 'z') {
+      e.preventDefault()
+      setControlMode('freehidden')
+    } else if (e.key === 'c' && !isChatting) {
+      setChatActive(prev => !prev)
+    } else if (e.key.toLowerCase() === 'q' && controlMode === 'freecam') {
+      setAvatarPos([freeCamPos.x, 0, freeCamPos.z])
+      setControlMode('avatar')
+    }
+  }
 
-        window.addEventListener('keydown', handleKey)
-        return () => window.removeEventListener('keydown', handleKey)
-    }, [isChatting])
+  window.addEventListener('keydown', handleKey)
+  return () => window.removeEventListener('keydown', handleKey)
+}, [controlMode, isChatting, freeCamPos, setAvatarPos])
 
 
 
 
-
+/*
     useEffect(() => {
-        const [x, z] = gpsToXZ(40.765, -111.89); // Replace with your mock GPS
-        setAvatarPos([x, 0, z]); // y=0 on ground
+        const [x, z] = gpsToXZ(40.7660, -111.8460)
+        setAvatarPos([x, 0, z]);
     }, []);
-
+*/
 
 
     useEffect(() => {
@@ -126,9 +145,9 @@ export default function ThreeScene() {
             if (!followingSur) return;
 
             const target: [number, number, number] = [
-                avatarPos[0] + 10,
+                avatarPos[0] + 1,
                 avatarPos[1],
-                avatarPos[2] - 10,
+                avatarPos[2] - 1,
             ];
             const speed = 0.05;
 
@@ -162,24 +181,32 @@ export default function ThreeScene() {
                         <directionalLight position={[10, 10, 10]} />
 
                         <WebtrixEntry />
-                        {/*<Details onSelect={() => {}} />*/}
-                        <ComplexBuildings buildingData={buildings} onSelect={setSelectedBuilding} />
 
-                        {(controlMode === 'freecam' || controlMode === 'freehidden') && <FreeCam />}
+                        <ComplexBuildings buildingData={buildings} onSelect={setSelectedBuilding} />
+                        <Trees onSelect={() => { }} />
+                        <Paths onSelect={() => { }} />
+                        <GrassForest onSelect={() => { }} />
+                        <House />
+                        <Renevade />
+                        <Computer />
+                        <BlackrockPortal onTeleport={() => setAvatarPos([0,0,5])} />
+                        <CenterPortal onTeleport={() => setAvatarPos([1180,0,1330])} />
+
+                        {(controlMode === 'freecam' || controlMode === 'freehidden') && <FreeCam setCamPos={setFreeCamPos} />}
 
                         {(controlMode === 'avatar' || controlMode === 'freecam') && (
                             <>
                                 {controlMode === 'avatar' && <ThirdPersonCamera avatarRef={avatarRef} />}
                                 <editable.group theatreKey="AvatarRoot1">
-                                    
-                                        <Avatar
-                                            ref={avatarRef}
-                                            position={avatarPos}
-                                            setAvatarPos={setAvatarPos}
-                                            active={controlMode === 'avatar' && !isChatting}
-                                            text={avatarSpeech}
-                                            capsuleRef={capsuleRef}
-                                        />
+
+                                    <Avatar
+                                        ref={avatarRef}
+                                        position={avatarPos}
+                                        setAvatarPos={setAvatarPos}
+                                        active={controlMode === 'avatar' && !isChatting}
+                                        text={avatarSpeech}
+                                        capsuleRef={capsuleRef}
+                                    />
                                 </editable.group>
                             </>
                         )}
@@ -192,25 +219,35 @@ export default function ThreeScene() {
                             />
                         </RigidBody>
                         <RigidBody>
-                        <SurFollower /></RigidBody>
+                            <SurFollower /></RigidBody>
                         {/* Ground plane */}
                         <RigidBody>
                             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-                                <planeGeometry args={[1800, 1300]} />
-                                <meshStandardMaterial color="darkgrey" />
+                                <planeGeometry args={[5000, 3500]} />
+                                <meshStandardMaterial color="#454f54" />
                             </mesh>
                         </RigidBody>
+                        <Html position={new THREE.Vector3(10.5, 5.5, 15)}>
+                            <a href='http://localhost:3001'>
+                                <span className='text-white'>⚫ Enter Webspace</span>
+                            </a>
+                        </Html>
+                        <RiftInstance
+                            center={new THREE.Vector3(10, 5, 15)}
+                            height={1}
+                            offset={new THREE.Vector3(0, 4, 0)}
+                        />
 
 
-                        <Html position={new THREE.Vector3(20, 42, 50)}>
+                        <Html position={new THREE.Vector3(14, 10, 51)}>
                             <Link href='/webmatrix'>
-                                ⚫ Enter Webspace
+                                <span className='text-white'>⚫ Enter Webspace</span>
                             </Link>
                         </Html>
                         <RiftInstance
                             center={new THREE.Vector3(15, 20, 50)}
                             height={20}
-                            offset={new THREE.Vector3(0, 20, 0)}
+                            offset={new THREE.Vector3(0, -10, 0)}
                         />
                     </SheetProvider>
                 </Physics>
