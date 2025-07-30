@@ -1,12 +1,12 @@
 import React from 'react'
-import { useInventoryStore } from './inventoryStore'
+import { useWorldStore } from './worldStore'
 import { craftables } from './craftables'
 
 export default function CraftingOverlay() {
-  const items = useInventoryStore(state => state.items)
-  const addItems = useInventoryStore(state => state.addItems)
-  const removeItems = useInventoryStore(state => state.removeItems)
-  const getItemCount = useInventoryStore(state => state.getItemCount)
+  const items = useWorldStore(state => state.inventoryItems)
+  const addItems = useWorldStore(state => state.addItems)
+  const removeItems = useWorldStore(state => state.removeItems)
+  const getItemCount = useWorldStore(state => state.getItemCount)
 
   const canCraft = (requirements: { item: string; count: number }[]) =>
     requirements.every(({ item, count }) => getItemCount(item) >= count)
@@ -29,7 +29,7 @@ export default function CraftingOverlay() {
             <div>
               <div className="font-bold">{name}</div>
               <div className="text-sm text-gray-700">
-                {requirements.map(r => `${r.count} ${r.item}`).join(', ')} 
+                {requirements.map(r => `${r.count} ${r.item}`).join(', ')}
               </div>
             </div>
             <button
@@ -45,5 +45,3 @@ export default function CraftingOverlay() {
     </div>
   )
 }
-
-//→ {produces.count} {produces.item}

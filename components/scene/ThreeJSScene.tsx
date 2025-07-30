@@ -36,12 +36,17 @@ import ModeIndicator from "../action/build/ModeIndicator";
 import ModeIndicatorWrapper from "../action/build/ModeIndicator";
 import ProjectileUpdater from "../action/contact/ProjectileUpdater";
 import InventoryOverlay from "../action/perform/InventoryOverlay";
-import { useInventoryStore } from "../action/perform/inventoryStore";
+//import { useInventoryStore } from "../action/perform/inventoryStore";
 import { CuboidCollider } from '@react-three/rapier'
 import { RapierRigidBody } from '@react-three/rapier'
 import NewAvatar from "./experimental/NewAvatar";
 import NewThirdPersonCamera from "./experimental/ThirdPersonCamera";
 import CraftingOverlay from "../action/perform/CraftingOverlay";
+import MapOverlay from "../action/perform/MapOverlay";
+import { useWorldStore } from "../action/perform/worldStore";
+import { supabase } from "@/lib/supabaseClient";
+import { tempUserId } from "@/lib/user";
+import { useRealtimePlacedObjects } from "@/lib/useRealTimePlacedObjects";
 
 if (typeof window !== 'undefined') studio.initialize()
 
@@ -57,6 +62,9 @@ function gpsToXZ(lat: number, lon: number): [number, number] {
     const z = dLat * R;
     return [x, z];
 }
+
+console.log(tempUserId);
+
 
 type ComplexBuilding = {
     id: number
@@ -75,7 +83,11 @@ type ComplexBuilding = {
 export default function ThreeScene() {
     const [buildings, setBuildings] = useState<ComplexBuilding[]>([])
     const [selectedBuilding, setSelectedBuilding] = useState<ComplexBuilding | null>(null)
-    const [avatarPos, setAvatarPos] = useState<any>([25, 0, 12]);
+
+    //const [avatarPos, setAvatarPos] = useState<any>([25, 0, 12]);
+    const setAvatarPos = useWorldStore(state => state.setAvatarPosition)
+    const avatarPos = useWorldStore(state => state.avatarPosition)
+
     const [controlMode, setControlMode] = useState<'avatar' | 'freecam' | 'freehidden'>('avatar')
     const [isChatting, setIsChatting] = useState(false)
     const [chatActive, setChatActive] = useState(false)
@@ -87,11 +99,7 @@ export default function ThreeScene() {
     const [freeCamPos, setFreeCamPos] = useState<THREE.Vector3>(new THREE.Vector3())
     const [mainOverlayActive, setMainOverlayActive] = useState<boolean>(false)
     const [placingType, setPlacingType] = useState<PlaceableType | null>(null)
-    const [placedObjects, setPlacedObjects] = useState<Array<{
-        id: string
-        type: PlaceableType 
-        position: [number, number, number]
-    }>>([])
+
     const [deletionMode, setDeletionMode] = useState(false)
     const [isBuilding, setIsBuildings] = useState<boolean>(false)
     const [pvpMode, setPvpMode] = useState(false)
@@ -102,14 +110,60 @@ export default function ThreeScene() {
     }>>([]);
     const [camera, setCamera] = useState<THREE.Camera | null>(null);
     const [showInventory, setShowInventory] = useState<boolean>(false);
-    const addItem = useInventoryStore(state => state.addItem)
-    const removeItem = useInventoryStore(state => state.removeItem)
-    const items = useInventoryStore(state => state.items) 
+    const [isLoading, setIsLoading] = useState(true);
+
+
+    //const addItem = useInventoryStore(state => state.addItem)
+    //const removeItem = useInventoryStore(state => state.removeItem)
+    const addItem = useWorldStore(state => state.addItem)
+    const removeItem = useWorldStore(state => state.removeItem)
+    const getItemCount = useWorldStore(state => state.getItemCount)
+    const inventoryItems = useWorldStore(state => state.inventoryItems)
+    //const [placedObjects, setPlacedObjects] = useState<Array<{
+    //    id: string
+    //    type: PlaceableType
+    //    position: [number, number, number]
+    //}>>([])
+
+    const placedObjects = useWorldStore(state => state.placedObjects)
+    const addPlacedObject = useWorldStore(state => state.addPlacedObject)
+    const removePlacedObject = useWorldStore(state => state.removePlacedObject)
+
+    const items = useWorldStore(state => state.inventoryItems)
+
     const [showCrafting, setShowCrafting] = useState<boolean>(false);
+    const [showMap, setShowMap] = useState<boolean>(false)
 
 
     const capsuleRef = useRef<THREE.Mesh | null>(null)
     const avatarRef = useRef<THREE.Group | null>(null)
+
+    useRealtimePlacedObjects();
+
+
+    async function loadStateFromSupabase() {
+        const [avatarRes, inventoryRes, placedRes] = await Promise.all([
+            supabase.from('avatars').select('*').eq('user_id', tempUserId).single(),
+            supabase.from('inventory').select('*').eq('user_id', tempUserId),
+            supabase.from('placed_objects').select('*').eq('user_id', tempUserId),
+        ])
+
+        if (avatarRes.data?.position) {
+            useWorldStore.setState({ avatarPosition: avatarRes.data.position })
+        }
+        if (inventoryRes.data) {
+            useWorldStore.setState({ inventoryItems: inventoryRes.data })
+        }
+        if (placedRes.data) {
+            useWorldStore.setState({ placedObjects: placedRes.data })
+        }
+
+    }
+
+
+    useEffect(() => {
+        loadStateFromSupabase()
+    }, [])
 
     function getItemIdByName(name: string) {
         const item = items.find(i => i.name.toLowerCase() === name.toLowerCase())
@@ -126,12 +180,36 @@ export default function ThreeScene() {
     const types: PlaceableType[] = ['Box', 'Chair']
 
     useEffect(() => {
-        addItem('Box', 5)
-        addItem('Chair', 5)
-        addItem('Energy', 5)
-        addItem('Metal', 5)
-        addItem('Wood', 5)
+        async function loadOrSeed() {
+            const [avatarRes, inventoryRes, placedRes] = await Promise.all([
+                supabase.from('avatars').select('*').eq('user_id', tempUserId).single(),
+                supabase.from('inventory').select('*').eq('user_id', tempUserId),
+                supabase.from('placed_objects').select('*').eq('user_id', tempUserId),
+            ])
+
+            if (avatarRes.data?.position) {
+                useWorldStore.setState({ avatarPosition: avatarRes.data.position })
+            }
+
+            if (inventoryRes.data?.length) {
+                useWorldStore.setState({ inventoryItems: inventoryRes.data })
+            } else {
+                // seed if none found
+                addItem('Box', 5)
+                addItem('Chair', 5)
+                addItem('Energy', 5)
+                addItem('Metal', 5)
+                addItem('Wood', 5)
+            }
+
+            if (placedRes.data?.length) {
+                useWorldStore.setState({ placedObjects: placedRes.data })
+            }
+        }
+
+        loadOrSeed()
     }, [])
+
 
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
@@ -152,14 +230,20 @@ export default function ThreeScene() {
                     setAvatarPos([freeCamPos.x, 0, freeCamPos.z])
                     setControlMode('avatar')
                 }
-            } else if (e.key.toLowerCase() === 'e') {
-                if (!chatActive && !isChatting) {
+            } else if (e.key.toLowerCase() === 'e' && !isChatting) {
                     setMainOverlayActive(prev => !prev)
+                if (!mainOverlayActive) {
+                    setShowCrafting(true)
+                    setShowInventory(true);
                 }
-            } else if (e.key.toLowerCase() === 'b') {
+                if (mainOverlayActive) {
+                    setShowCrafting(false)
+                    setShowInventory(false);
+                }
+            } else if (e.key.toLowerCase() === 'b' && !isChatting) {
                 setPlacingType(prev => (prev === 'Box' ? null : 'Box'))
                 setIsBuildings(prev => !prev)
-            } else if (e.key.toLowerCase() === 'n') {
+            } else if (e.key.toLowerCase() === 'n' && !isChatting) {
                 setPlacingType(prev => {
                     const i = types.indexOf(prev ?? 'Box')
                     return types[(i + 1) % types.length]
@@ -167,15 +251,17 @@ export default function ThreeScene() {
             } else if (e.key.toLowerCase() === 'g' && !isChatting) {
                 setDeletionMode(prev => !prev)
                 setPlacingType(null) // disable placing while deleting
-            } else if (e.key.toLowerCase() === 'r') {
+            } else if (e.key.toLowerCase() === 'r' && !isChatting) {
                 setPvpMode(prev => {
                     console.log('Toggling PvP mode:', !prev)
                     return !prev
                 })
-            } else if (e.key.toLowerCase() === 'i') {
+            } else if (e.key.toLowerCase() === 'i' && !isChatting) {
                 setShowInventory(prev => !prev)
-            } else if (e.key.toLowerCase() === 'k') {
+            } else if (e.key.toLowerCase() === 'k' && !isChatting) {
                 setShowCrafting(prev => !prev)
+            } else if (e.key.toLowerCase() === 'm' && !isChatting) {
+                setShowMap(prev => !prev)
             }
         }
 
@@ -253,7 +339,7 @@ export default function ThreeScene() {
 
     function handleHarvestResource(tree: Detail) {
         console.log('Harvesting wood from tree id:', tree.id);
-        useInventoryStore.getState().addItem('Wood', 1);
+        addItem('Wood', 1)
     }
 
 
@@ -323,29 +409,25 @@ export default function ThreeScene() {
                             position={[0, 0, 0]}
                             rotation={[-Math.PI / 2, 0, 0]}
                             onClick={(e) => {
-                                if (!placingType) return
+                                if (!placingType) return;
 
-                                // Check inventory quantity before placing
-                                const itemId = getItemIdByName(placingType)
-                                if (!itemId) {
-                                    console.log(`No ${placingType} left in inventory!`)
-                                    return
+                                const item = inventoryItems.find(i => i.name === placingType);
+                                const count = item?.count ?? 0;
+                                if (count < 1) {
+                                    console.log(`No ${placingType} left in inventory!`);
+                                    return;
                                 }
+                                removeItem(placingType, 1);
 
-                                // Remove one item from inventory
-                                removeItem(itemId, 1)
-
-                                const point = e.point
-                                setPlacedObjects(prev => [
-                                    ...prev,
-                                    {
-                                        id: crypto.randomUUID(),
-                                        type: placingType,
-                                        position: [point.x, 0.5, point.z],
-                                    },
-                                ])
+                                const point = e.point;
+                                addPlacedObject({
+                                    id: crypto.randomUUID(),
+                                    type: placingType,
+                                    position: [point.x, 0.5, point.z],
+                                });
                             }}
                         >
+
                             <planeGeometry args={[100, 100]} />
                             <meshBasicMaterial transparent opacity={0} />
                         </mesh>
@@ -358,7 +440,7 @@ export default function ThreeScene() {
                                     onClick={(e) => {
                                         if (deletionMode) {
                                             e.stopPropagation()
-                                            setPlacedObjects(prev => prev.filter(o => o.id !== obj.id))
+                                            removePlacedObject(obj.id)
                                             addItem(obj.type, 1) // refund 1 item of this type
                                         }
                                     }}
@@ -386,38 +468,38 @@ export default function ThreeScene() {
                                 isOverlayOn={(chatActive || mainOverlayActive)}
                                 setCamPos={setFreeCamPos} />
                         )}
-                        
-                            {(controlMode === 'avatar' || controlMode === 'freecam') && (
-                                <>
-                                    
+
+                        {(controlMode === 'avatar' || controlMode === 'freecam') && (
+                            <>
+
                                 {controlMode === 'avatar' && (
                                     <ThirdPersonCamera avatarRef={avatarRef} setCamera={setCamera} />
                                 )}
 
-                                    <editable.group theatreKey="AvatarRoot1">
-                                        <Avatar
-                                            ref={avatarRef}
-                                            position={avatarPos}
-                                            setAvatarPos={setAvatarPos}
-                                            active={controlMode === 'avatar' && !isChatting}
-                                            text={avatarSpeech}
-                                            capsuleRef={capsuleRef}
-                                        />
-                                    </editable.group>
-                                </>
-                            )}
-                        
-                      
-                       
-                            <SurrealAvatar
-                                position={surrealPos}
-                                active={followingSurreal}
-                                onClick={() => setFollowingSurreal(!followingSurreal)}
-                                text={surrealSpeech}
-                            />
-                      
-                  
-                            <SurrealFollower />
+                                <editable.group theatreKey="AvatarRoot1">
+                                    <Avatar
+                                        ref={avatarRef}
+                                        position={avatarPos}
+                                        setAvatarPos={setAvatarPos}
+                                        active={controlMode === 'avatar' && !isChatting}
+                                        text={avatarSpeech}
+                                        capsuleRef={capsuleRef}
+                                    />
+                                </editable.group>
+                            </>
+                        )}
+
+
+
+                        <SurrealAvatar
+                            position={surrealPos}
+                            active={followingSurreal}
+                            onClick={() => setFollowingSurreal(!followingSurreal)}
+                            text={surrealSpeech}
+                        />
+
+
+                        <SurrealFollower />
                         {/* Ground plane */}
 
 
@@ -456,6 +538,7 @@ export default function ThreeScene() {
                     </SheetProvider>
                 </Physics>
             </Canvas>
+            {showMap && <MapOverlay />}
             {mainOverlayActive && (
                 <MainOverlay
                     isChatting={isChatting}
@@ -470,7 +553,7 @@ export default function ThreeScene() {
                     }}
                 />
             )}
-            {showCrafting  && <CraftingOverlay />}
+            {showCrafting && <CraftingOverlay />}
             {chatActive && (
                 <ChatOverlay
                     isChatting={isChatting}
