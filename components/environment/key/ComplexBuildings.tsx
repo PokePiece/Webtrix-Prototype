@@ -43,13 +43,13 @@ const matColorGenerator = () => {
 
   let randomNumber = Math.floor(Math.random() * 10)
 
-  if(randomNumber < 3) materialColor = 'lightBlue'
-  else if(randomNumber < 6 ) materialColor = 'blue'
-  else if(randomNumber < 8) materialColor = 'cyan'
-  else if(randomNumber < 10) materialColor = 'indigo'
+  if (randomNumber < 3) materialColor = 'lightBlue'
+  else if (randomNumber < 6) materialColor = 'blue'
+  else if (randomNumber < 8) materialColor = 'cyan'
+  else if (randomNumber < 10) materialColor = 'indigo'
 
   return materialColor
-  
+
 }
 
 export default function ComplexBuildings({
@@ -82,11 +82,12 @@ export default function ComplexBuildings({
         <group key={i}>
           <mesh
             geometry={geometry}
-            onClick={(e) => {
-              e.stopPropagation()
-              onSelect({ coords, height, id, name, type, amenity, address, wikidata, wikipedia, website, webspace })
+            onContextMenu={(e) => {
+              e.stopPropagation();
+              onSelect({ coords, height, id, name, type, amenity, address, wikidata, wikipedia, website, webspace });
             }}
           >
+
             <meshStandardMaterial color={matColorGenerator()} />
           </mesh>
 

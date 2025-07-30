@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -31,13 +31,17 @@ import Avatar from "./3DAvatar";
 import MainOverlay from "./MainOverlay";
 import Houses from "../environment/key/Houses";
 import Chair from "../environment/key/Chair";
+import { placeableComponents, PlaceableType } from '@/lib/placeables'
+import ModeIndicator from "../action/build/ModeIndicator";
+import ModeIndicatorWrapper from "../action/build/ModeIndicator";
+import ProjectileUpdater from "../action/contact/ProjectileUpdater";
 
 if (typeof window !== 'undefined') studio.initialize()
 
 const sheet = getProject('My Project').sheet('Scene')
 
 function gpsToXZ(lat: number, lon: number): [number, number] {
-    const R = 6371000; 
+    const R = 6371000;
     const originLat = 40.7660;
     const originLon = -111.8460;
     const dLat = (lat - originLat) * (Math.PI / 180);
@@ -75,6 +79,24 @@ export default function ThreeScene() {
     const [surrealSpeech, setSurrealSpeech] = useState<string | null>(null);
     const [freeCamPos, setFreeCamPos] = useState<THREE.Vector3>(new THREE.Vector3())
     const [mainOverlayActive, setMainOverlayActive] = useState<boolean>(false)
+    const [placingType, setPlacingType] = useState<PlaceableType | null>(null)
+    const [placedObjects, setPlacedObjects] = useState<Array<{
+        id: string
+        type: PlaceableType // <-- allow all types, not just 'box'
+        position: [number, number, number]
+    }>>([])
+    const [deletionMode, setDeletionMode] = useState(false)
+    const [isBuilding, setIsBuildings] = useState<boolean>(false)
+    const [pvpMode, setPvpMode] = useState(false)
+    const [projectiles, setProjectiles] = useState<Array<{
+        id: string;
+        position: [number, number, number];
+        velocity: [number, number, number];
+    }>>([]);
+    const [camera, setCamera] = useState<THREE.Camera | null>(null);
+
+
+
 
     const capsuleRef = useRef<THREE.Mesh | null>(null)
     const avatarRef = useRef<THREE.Group | null>(null)
@@ -82,6 +104,8 @@ export default function ThreeScene() {
     if (followingSurreal) {
         lastSurrealPos.current = [avatarPos[0], avatarPos[1], avatarPos[2] - 5]
     }
+
+    const types: PlaceableType[] = ['box', 'chair']
 
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
@@ -105,6 +129,22 @@ export default function ThreeScene() {
                 if (!chatActive && !isChatting) {
                     setMainOverlayActive(prev => !prev)
                 }
+            } else if (e.key.toLowerCase() === 'b') {
+                setPlacingType(prev => (prev === 'box' ? null : 'box'))
+                setIsBuildings(prev => !prev)
+            } else if (e.key.toLowerCase() === 'n') {
+                setPlacingType(prev => {
+                    const i = types.indexOf(prev ?? 'box')
+                    return types[(i + 1) % types.length]
+                })
+            } else if (e.key.toLowerCase() === 'g' && !isChatting) {
+                setDeletionMode(prev => !prev)
+                setPlacingType(null) // disable placing while deleting
+            } else if (e.key.toLowerCase() === 'r') {
+                setPvpMode(prev => {
+                    console.log('Toggling PvP mode:', !prev)
+                    return !prev
+                })
             }
         }
 
@@ -118,6 +158,66 @@ export default function ThreeScene() {
             setAvatarPos([x, 0, z]);
         }, []);
     */
+
+    useEffect(() => {
+        const disableContextMenu = (e: MouseEvent) => e.preventDefault();
+        window.addEventListener('contextmenu', disableContextMenu);
+        return () => window.removeEventListener('contextmenu', disableContextMenu);
+    }, []);
+
+
+    const shootProjectile = useCallback(() => {
+        if (!camera) {
+            console.log('No camera available to shoot projectile');
+            return;
+        }
+        console.log('Shooting projectile from position:', avatarPos);
+
+        const pos: [number, number, number] = [
+            avatarPos[0],
+            avatarPos[1] + 1, // raise projectile start height
+            avatarPos[2],
+        ];
+
+        const dir = new THREE.Vector3();
+        camera.getWorldDirection(dir);
+
+        // Flatten direction to horizontal plane if desired
+        dir.y = 0;
+        dir.normalize();
+
+        const speed = 10;
+        const velocity: [number, number, number] = [
+            dir.x * speed,
+            dir.y * speed,
+            dir.z * speed,
+        ];
+
+        setProjectiles(prev => [
+            ...prev,
+            { id: crypto.randomUUID(), position: pos, velocity },
+        ]);
+    }, [avatarPos, camera]);
+
+
+
+
+
+
+    useEffect(() => {
+        if (!pvpMode) return;
+
+        const handleShoot = (e: MouseEvent) => {
+            e.preventDefault();
+            console.log('Click detected, shooting projectile');
+            shootProjectile();
+        };
+
+        window.addEventListener('click', handleShoot);
+        return () => window.removeEventListener('click', handleShoot);
+    }, [pvpMode, shootProjectile]);
+
+
 
     useEffect(() => {
         fetchBuildingData().then((res) => {
@@ -152,7 +252,7 @@ export default function ThreeScene() {
             <Canvas
                 style={{ background: 'lightBlue' }}
                 onCreated={({ scene }) => {
-                    scene.background = new THREE.Color('#05021C'); 
+                    scene.background = new THREE.Color('#05021C');
                 }}
             >
                 <Physics>
@@ -174,15 +274,69 @@ export default function ThreeScene() {
                         <Houses />
                         <Chair />
 
+                        {/*Plane Catcher*/}
+                        <mesh
+                            position={[0, 0, 0]}
+                            rotation={[-Math.PI / 2, 0, 0]}
+                            onClick={(e) => {
+                                if (!placingType) return
+                                const point = e.point
+                                setPlacedObjects(prev => [
+                                    ...prev,
+                                    {
+                                        id: crypto.randomUUID(),
+                                        type: placingType, // <-- use current placingType here
+                                        position: [point.x, 0.5, point.z],
+                                    },
+                                ])
+                            }}
+                        >
+                            <planeGeometry args={[100, 100]} />
+                            <meshBasicMaterial transparent opacity={0} />
+                        </mesh>
+
+                        {placedObjects.map(obj => {
+                            const Component = placeableComponents[obj.type]
+                            return (
+                                <group
+                                    key={obj.id}
+                                    onClick={(e) => {
+                                        if (deletionMode) {
+                                            e.stopPropagation()
+                                            setPlacedObjects(prev => prev.filter(o => o.id !== obj.id))
+                                        }
+                                    }}
+                                // Optional: highlight when deletionMode active
+                                // e.g. style changes or outline effect
+                                >
+                                    <Component position={obj.position} />
+                                </group>
+                            )
+                        })}
+
+                        {projectiles.map(p => {
+                            console.log(`Rendering projectile ${p.id} at`, p.position);
+                            return (
+                                <mesh key={p.id} position={p.position}>
+                                    <sphereGeometry args={[0.1, 8, 8]} />
+                                    <meshStandardMaterial color="yellow" />
+                                </mesh>
+                            );
+                        })}
+
+                        <ProjectileUpdater projectiles={projectiles} setProjectiles={setProjectiles} />
+
+
                         {(controlMode === 'freecam' || controlMode === 'freehidden') && (
-                            <FreeCam 
-                            isOverlayOn={(chatActive || mainOverlayActive)}
-                            setCamPos={setFreeCamPos} /> 
-                            )}
+                            <FreeCam
+                                isOverlayOn={(chatActive || mainOverlayActive)}
+                                setCamPos={setFreeCamPos} />
+                        )}
 
                         {(controlMode === 'avatar' || controlMode === 'freecam') && (
                             <>
-                                {controlMode === 'avatar' && <ThirdPersonCamera avatarRef={avatarRef} />}
+                                {controlMode === 'avatar' && <ThirdPersonCamera avatarRef={avatarRef} setCamera={setCamera} />}
+
                                 <editable.group theatreKey="AvatarRoot1">
 
                                     <Avatar
@@ -266,6 +420,12 @@ export default function ThreeScene() {
                     }}
                 />
             )}
+            <ModeIndicatorWrapper
+                isBuilding={isBuilding}
+                placingType={placingType}
+                deletionMode={deletionMode}
+            />
+
 
 
             {selectedBuilding && (
