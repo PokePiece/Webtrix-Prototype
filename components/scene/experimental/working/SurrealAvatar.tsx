@@ -20,7 +20,6 @@ const SurrealAvatar = forwardRef<THREE.Group, {
       ref={groupRef}
       scale={[0.7, 0.7, 0.7]}
       position={position}
-      rotation={[0,0,0]}
       onClick={onClick}
     >
       <mesh position={[0, 1, 0]}>

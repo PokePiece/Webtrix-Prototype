@@ -11,7 +11,7 @@ import studio from '@theatre/studio'
 import { getProject } from '@theatre/core'
 import { editable } from '@theatre/r3f'
 import { SheetProvider } from '@theatre/r3f'
-import { Physics, RigidBody } from "@react-three/rapier";
+import { CapsuleCollider, Physics, RigidBody } from "@react-three/rapier";
 import WebtrixEntry from "../environment/text/WebtrixEntry";
 import ComplexBuildings from "../environment/key/ComplexBuildings";
 import Trees from "../environment/key/Trees";
@@ -35,6 +35,13 @@ import { placeableComponents, PlaceableType } from '@/lib/placeables'
 import ModeIndicator from "../action/build/ModeIndicator";
 import ModeIndicatorWrapper from "../action/build/ModeIndicator";
 import ProjectileUpdater from "../action/contact/ProjectileUpdater";
+import InventoryOverlay from "../action/perform/InventoryOverlay";
+import { useInventoryStore } from "../action/perform/inventoryStore";
+import { CuboidCollider } from '@react-three/rapier'
+import { RapierRigidBody } from '@react-three/rapier'
+import NewAvatar from "./experimental/NewAvatar";
+import NewThirdPersonCamera from "./experimental/ThirdPersonCamera";
+import CraftingOverlay from "../action/perform/CraftingOverlay";
 
 if (typeof window !== 'undefined') studio.initialize()
 
@@ -68,7 +75,7 @@ type ComplexBuilding = {
 export default function ThreeScene() {
     const [buildings, setBuildings] = useState<ComplexBuilding[]>([])
     const [selectedBuilding, setSelectedBuilding] = useState<ComplexBuilding | null>(null)
-    const [avatarPos, setAvatarPos] = useState<any>([14, 0, 9]);
+    const [avatarPos, setAvatarPos] = useState<any>([25, 0, 12]);
     const [controlMode, setControlMode] = useState<'avatar' | 'freecam' | 'freehidden'>('avatar')
     const [isChatting, setIsChatting] = useState(false)
     const [chatActive, setChatActive] = useState(false)
@@ -82,7 +89,7 @@ export default function ThreeScene() {
     const [placingType, setPlacingType] = useState<PlaceableType | null>(null)
     const [placedObjects, setPlacedObjects] = useState<Array<{
         id: string
-        type: PlaceableType // <-- allow all types, not just 'box'
+        type: PlaceableType 
         position: [number, number, number]
     }>>([])
     const [deletionMode, setDeletionMode] = useState(false)
@@ -94,18 +101,37 @@ export default function ThreeScene() {
         velocity: [number, number, number];
     }>>([]);
     const [camera, setCamera] = useState<THREE.Camera | null>(null);
-
-
+    const [showInventory, setShowInventory] = useState<boolean>(false);
+    const addItem = useInventoryStore(state => state.addItem)
+    const removeItem = useInventoryStore(state => state.removeItem)
+    const items = useInventoryStore(state => state.items) 
+    const [showCrafting, setShowCrafting] = useState<boolean>(false);
 
 
     const capsuleRef = useRef<THREE.Mesh | null>(null)
     const avatarRef = useRef<THREE.Group | null>(null)
 
-    if (followingSurreal) {
-        lastSurrealPos.current = [avatarPos[0], avatarPos[1], avatarPos[2] - 5]
+    function getItemIdByName(name: string) {
+        const item = items.find(i => i.name.toLowerCase() === name.toLowerCase())
+        return item ? item.id : null
     }
 
-    const types: PlaceableType[] = ['box', 'chair']
+    useEffect(() => {
+        if (followingSurreal) {
+            lastSurrealPos.current = [avatarPos[0], avatarPos[1], avatarPos[2] - 5];
+        }
+    }, [avatarPos, followingSurreal]);
+
+
+    const types: PlaceableType[] = ['Box', 'Chair']
+
+    useEffect(() => {
+        addItem('Box', 5)
+        addItem('Chair', 5)
+        addItem('Energy', 5)
+        addItem('Metal', 5)
+        addItem('Wood', 5)
+    }, [])
 
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
@@ -115,6 +141,7 @@ export default function ThreeScene() {
                 setControlMode('freecam')
             } else if (e.key.toLowerCase() === 'z' && !isChatting) {
                 e.preventDefault()
+                console.log('setting control mode to freehidden')
                 setControlMode('freehidden')
             } else if (e.key.toLowerCase() === 'c' && !isChatting) {
                 if (!mainOverlayActive) {
@@ -130,11 +157,11 @@ export default function ThreeScene() {
                     setMainOverlayActive(prev => !prev)
                 }
             } else if (e.key.toLowerCase() === 'b') {
-                setPlacingType(prev => (prev === 'box' ? null : 'box'))
+                setPlacingType(prev => (prev === 'Box' ? null : 'Box'))
                 setIsBuildings(prev => !prev)
             } else if (e.key.toLowerCase() === 'n') {
                 setPlacingType(prev => {
-                    const i = types.indexOf(prev ?? 'box')
+                    const i = types.indexOf(prev ?? 'Box')
                     return types[(i + 1) % types.length]
                 })
             } else if (e.key.toLowerCase() === 'g' && !isChatting) {
@@ -145,6 +172,10 @@ export default function ThreeScene() {
                     console.log('Toggling PvP mode:', !prev)
                     return !prev
                 })
+            } else if (e.key.toLowerCase() === 'i') {
+                setShowInventory(prev => !prev)
+            } else if (e.key.toLowerCase() === 'k') {
+                setShowCrafting(prev => !prev)
             }
         }
 
@@ -186,7 +217,7 @@ export default function ThreeScene() {
         dir.y = 0;
         dir.normalize();
 
-        const speed = 10;
+        const speed = 50;
         const velocity: [number, number, number] = [
             dir.x * speed,
             dir.y * speed,
@@ -198,11 +229,6 @@ export default function ThreeScene() {
             { id: crypto.randomUUID(), position: pos, velocity },
         ]);
     }, [avatarPos, camera]);
-
-
-
-
-
 
     useEffect(() => {
         if (!pvpMode) return;
@@ -217,6 +243,18 @@ export default function ThreeScene() {
         return () => window.removeEventListener('click', handleShoot);
     }, [pvpMode, shootProjectile]);
 
+    type Coord = [number, number]
+    interface Detail {
+        id: number
+        coords: Coord[]
+        tags: { [key: string]: string }
+        type: 'node' | 'way'
+    }
+
+    function handleHarvestResource(tree: Detail) {
+        console.log('Harvesting wood from tree id:', tree.id);
+        useInventoryStore.getState().addItem('Wood', 1);
+    }
 
 
     useEffect(() => {
@@ -224,6 +262,8 @@ export default function ThreeScene() {
             setBuildings(res.buildings)
         })
     }, [])
+
+
 
     function SurrealFollower() {
         useFrame(() => {
@@ -246,6 +286,10 @@ export default function ThreeScene() {
         return null;
     }
 
+
+
+
+
     return (
         <>
 
@@ -263,7 +307,7 @@ export default function ThreeScene() {
                         <WebtrixEntry />
 
                         <ComplexBuildings buildingData={buildings} onSelect={setSelectedBuilding} />
-                        <Trees onSelect={() => { }} />
+                        <Trees onSelect={handleHarvestResource} />
                         <Footways onSelect={() => { }} />
                         <GrassForest onSelect={() => { }} />
                         <House />
@@ -280,12 +324,23 @@ export default function ThreeScene() {
                             rotation={[-Math.PI / 2, 0, 0]}
                             onClick={(e) => {
                                 if (!placingType) return
+
+                                // Check inventory quantity before placing
+                                const itemId = getItemIdByName(placingType)
+                                if (!itemId) {
+                                    console.log(`No ${placingType} left in inventory!`)
+                                    return
+                                }
+
+                                // Remove one item from inventory
+                                removeItem(itemId, 1)
+
                                 const point = e.point
                                 setPlacedObjects(prev => [
                                     ...prev,
                                     {
                                         id: crypto.randomUUID(),
-                                        type: placingType, // <-- use current placingType here
+                                        type: placingType,
                                         position: [point.x, 0.5, point.z],
                                     },
                                 ])
@@ -304,10 +359,9 @@ export default function ThreeScene() {
                                         if (deletionMode) {
                                             e.stopPropagation()
                                             setPlacedObjects(prev => prev.filter(o => o.id !== obj.id))
+                                            addItem(obj.type, 1) // refund 1 item of this type
                                         }
                                     }}
-                                // Optional: highlight when deletionMode active
-                                // e.g. style changes or outline effect
                                 >
                                     <Component position={obj.position} />
                                 </group>
@@ -332,41 +386,51 @@ export default function ThreeScene() {
                                 isOverlayOn={(chatActive || mainOverlayActive)}
                                 setCamPos={setFreeCamPos} />
                         )}
+                        
+                            {(controlMode === 'avatar' || controlMode === 'freecam') && (
+                                <>
+                                    
+                                {controlMode === 'avatar' && (
+                                    <ThirdPersonCamera avatarRef={avatarRef} setCamera={setCamera} />
+                                )}
 
-                        {(controlMode === 'avatar' || controlMode === 'freecam') && (
-                            <>
-                                {controlMode === 'avatar' && <ThirdPersonCamera avatarRef={avatarRef} setCamera={setCamera} />}
-
-                                <editable.group theatreKey="AvatarRoot1">
-
-                                    <Avatar
-                                        ref={avatarRef}
-                                        position={avatarPos}
-                                        setAvatarPos={setAvatarPos}
-                                        active={controlMode === 'avatar' && !isChatting}
-                                        text={avatarSpeech}
-                                        capsuleRef={capsuleRef}
-                                    />
-                                </editable.group>
-                            </>
-                        )}
-                        <RigidBody type='dynamic' colliders='cuboid'>
+                                    <editable.group theatreKey="AvatarRoot1">
+                                        <Avatar
+                                            ref={avatarRef}
+                                            position={avatarPos}
+                                            setAvatarPos={setAvatarPos}
+                                            active={controlMode === 'avatar' && !isChatting}
+                                            text={avatarSpeech}
+                                            capsuleRef={capsuleRef}
+                                        />
+                                    </editable.group>
+                                </>
+                            )}
+                        
+                      
+                       
                             <SurrealAvatar
                                 position={surrealPos}
                                 active={followingSurreal}
                                 onClick={() => setFollowingSurreal(!followingSurreal)}
                                 text={surrealSpeech}
                             />
-                        </RigidBody>
-                        <RigidBody>
-                            <SurrealFollower /></RigidBody>
+                      
+                  
+                            <SurrealFollower />
                         {/* Ground plane */}
-                        <RigidBody>
-                            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+
+
+                        <RigidBody type="fixed" colliders={false} position={[0, 0, 0]}>
+                            <CuboidCollider args={[2500, 0, 1750]} position={[0, 0, 0]} />
+                            <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
                                 <planeGeometry args={[5000, 3500]} />
                                 <meshStandardMaterial color="#454f54" />
                             </mesh>
                         </RigidBody>
+
+
+
                         <Html position={new THREE.Vector3(10.5, 5.5, 15)}>
                             <a href='http://localhost:3001'>
                                 <span className='text-white'>⚫ Enter Webspace</span>
@@ -406,6 +470,7 @@ export default function ThreeScene() {
                     }}
                 />
             )}
+            {showCrafting  && <CraftingOverlay />}
             {chatActive && (
                 <ChatOverlay
                     isChatting={isChatting}
@@ -419,6 +484,9 @@ export default function ThreeScene() {
                         setTimeout(() => setSurrealSpeech(null), 3000);
                     }}
                 />
+            )}
+            {showInventory && (
+                <InventoryOverlay />
             )}
             <ModeIndicatorWrapper
                 isBuilding={isBuilding}

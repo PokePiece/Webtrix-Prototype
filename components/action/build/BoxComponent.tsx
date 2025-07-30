@@ -12,7 +12,7 @@ const BoxComponent: React.FC<BoxComponentProps> = ({
   position = [0, 0.5, 0],
   rotation = [0, 0, 0],
   scale = [1, 1, 1],
-  color = 'purple',
+  color = 'khaki',
 }) => {
   return (
     <mesh position={position} rotation={rotation} scale={scale}>
