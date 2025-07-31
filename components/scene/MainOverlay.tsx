@@ -51,7 +51,7 @@ function MainOverlay({ isChatting, setIsChatting, onUserMessage, onAiMessage }: 
                 <div className="mb-2 text-center text-xl">
                 </div>
                 <iframe
-                    src="http://localhost:3002"
+                    src="http://localhost:3001"
                     className="w-full h-full"
                     allowFullScreen
                 />
