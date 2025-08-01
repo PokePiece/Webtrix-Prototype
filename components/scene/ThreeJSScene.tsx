@@ -47,8 +47,11 @@ import { useWorldStore } from "../action/perform/worldStore";
 import { supabase } from "@/lib/supabaseClient";
 import { tempUserId } from "@/lib/user";
 import { useRealtimePlacedObjects } from "@/lib/useRealTimePlacedObjects";
+import VoidNode from "../environment/key/VoidNode";
+import NodeOverlays from "./NodeOverlays";
+import InfoOverlays from "./InfoOverlays";
 
-if (typeof window !== 'undefined') studio.initialize()
+//if (typeof window !== 'undefined') studio.initialize()
 
 const sheet = getProject('My Project').sheet('Scene')
 
@@ -111,6 +114,9 @@ export default function ThreeScene() {
     const [camera, setCamera] = useState<THREE.Camera | null>(null);
     const [showInventory, setShowInventory] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [showVoid, setShowVoid] = useState(false);
+    const [showVoidInfo, setShowVoidInfo] = useState(false);
+    const [showTreeInfo, setShowTreeInfo] = useState(false);
 
 
     //const addItem = useInventoryStore(state => state.addItem)
@@ -231,7 +237,7 @@ export default function ThreeScene() {
                     setControlMode('avatar')
                 }
             } else if (e.key.toLowerCase() === 'e' && !isChatting) {
-                    setMainOverlayActive(prev => !prev)
+                setMainOverlayActive(prev => !prev)
                 if (!mainOverlayActive) {
                     setShowCrafting(true)
                     setShowInventory(true);
@@ -393,7 +399,7 @@ export default function ThreeScene() {
                         <WebtrixEntry />
 
                         <ComplexBuildings buildingData={buildings} onSelect={setSelectedBuilding} />
-                        <Trees onSelect={handleHarvestResource} />
+                        <Trees onSelect={handleHarvestResource} setShowTreeInfo={setShowTreeInfo} />
                         <Footways onSelect={() => { }} />
                         <GrassForest onSelect={() => { }} />
                         <House />
@@ -403,6 +409,7 @@ export default function ThreeScene() {
                         <CenterPortal onTeleport={() => setAvatarPos([1180, 0, 1330])} />
                         <Houses />
                         <Chair />
+                        <VoidNode setShowVoid={setShowVoid} setShowVoidInfo={setShowVoidInfo} />
 
                         {/*Plane Catcher*/}
                         <mesh
@@ -514,7 +521,7 @@ export default function ThreeScene() {
 
 
                         <Html position={new THREE.Vector3(10.5, 5.5, 15)}>
-                            <a href='http://localhost:3001'>
+                            <a href='http://localhost:3002'>
                                 <span className='text-white'>⚫ Enter Webspace</span>
                             </a>
                         </Html>
@@ -538,6 +545,13 @@ export default function ThreeScene() {
                     </SheetProvider>
                 </Physics>
             </Canvas>
+            <InfoOverlays
+                setShowVoidInfo={setShowVoidInfo}
+                showVoidInfo={showVoidInfo}
+                setShowTreeInfo={setShowTreeInfo}
+                showTreeInfo={showTreeInfo}
+            />
+            <NodeOverlays showVoid={showVoid} setShowVoid={setShowVoid} setIsChatting={setIsChatting} />
             {showMap && <MapOverlay />}
             {mainOverlayActive && (
                 <MainOverlay

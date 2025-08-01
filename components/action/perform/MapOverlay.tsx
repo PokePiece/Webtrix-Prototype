@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 
 const INITIAL_POSITION: [number, number] = [40.7660, -111.8460]
-const INITIAL_ZOOM = 14.5
+const INITIAL_ZOOM = 20
 
 function SetViewOnLoad({ center, zoom }: { center: [number, number]; zoom: number }) {
     const map = useMap()

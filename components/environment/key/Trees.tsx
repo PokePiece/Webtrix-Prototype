@@ -21,12 +21,12 @@ interface Detail {
     tags: { [key: string]: string }
     type: 'node' | 'way'
 }
-
 interface TreesProps {
     onSelect: (detail: Detail) => void
+    setShowTreeInfo: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export default function Trees({ onSelect }: TreesProps) {
+export default function Trees({ onSelect, setShowTreeInfo }: TreesProps) {
     const [trees, setTrees] = useState<Detail[]>([])
 
     const { camera } = useThree()
@@ -108,6 +108,12 @@ export default function Trees({ onSelect }: TreesProps) {
                         geometry={sphereGeo}
                         material={greenMat}
                         onClick={() => onSelect(tree)}
+                        onContextMenu={
+                            (e) => {
+                                e.stopPropagation();
+                                setShowTreeInfo(prev => !prev)
+                            }
+                        }
                     />
                 )
             })}

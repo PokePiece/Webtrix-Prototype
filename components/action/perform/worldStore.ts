@@ -180,8 +180,9 @@ export const useWorldStore = create<State>((set, get) => ({
         get().saveState()
     },
     removePlacedObject: (id) => {
-        set(state => ({ placedObjects: state.placedObjects.filter(o => o.id !== id) }))
-        get().saveState()
+        set(state => ({ placedObjects: state.placedObjects.filter(o => o.id !== id) }));
+        supabase.from('placed_objects').delete().eq('id', id).eq('user_id', tempUserId)
+        get().saveState();
     },
 
     loadState: () => {
