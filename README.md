@@ -1,40 +1,42 @@
-# Webtrix - Stylized 3D Web Map Demo
+# Webtrix - The Web as a World
 
-This is an early-stage prototype of a lightweight 3D spatial web experience built with React Three Fiber and Next.js.
-
-## Overview
-
-The project visualizes local sites as stylized 3D objects on a simplified map. It includes:
-
-- A minimal map plane with color-coded 3D "buildings" representing points of interest.
-- A simple user avatar rendered as a capsule and sphere.
-- Basic keyboard controls (WASD / arrow keys) for avatar movement.
-- Interactive 3D scene managed via Three.js in React.
-
-This demo showcases core foundational elements for a spatial web interface designed for exploration and interaction.
-
-## Tech Stack
-
-- Next.js with the `/app` directory and React 18.
-- React Three Fiber (`@react-three/fiber`) for WebGL rendering.
-- Drei (`@react-three/drei`) for helpers (e.g. orbit controls).
-- Tailwind CSS for utility-first styling.
-
-## Usage
-
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Run the dev server: `npm run dev`
-4. Open the app in the browser and use WASD or arrow keys to move the avatar.
-
-## Next Steps (Planned)
-
-- Camera following the avatar
-- More detailed avatar models and animations
-- Interactive buildings linked to real web content
-- Map data integration and GPS support
+**Webtrix** is an evolving 3D spatial interface for the web—part stylized map, part immersive OS, part AI-native reality layer. It merges real-world locations with interactive web experiences through a physics-enabled, multiplayer-capable environment. Built with React Three Fiber and Next.js, it transforms sites, services, and intelligence nodes into manipulable 3D objects.
 
 ---
 
-This repository is an early work in progress. Contributions and feedback are welcome!
+## 🌐 Overview
 
+Webtrix is grounded in two layers:
+
+- **The Physical Capital**: Anchored to real-world geography (starting in Salt Lake City), it maps physical services and technologies to real coordinates and buildings.
+- **The Webspace Capital**: A floating, abstract dimensional layer where digital-only entities (AI blueprints, logic clusters, simulations) reside. Portals link both layers.
+
+Webtrix allows you to:
+
+- Walk through a 3D web interface.
+- Interact with real services via physicalized representations.
+- Place, harvest, craft, and upgrade web-native tools and knowledge.
+- Represent Python, C++, and JS services as 3D nodes, either as active services or JS-based simulations.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Next.js** (`/app` directory)
+- **React Three Fiber** (`@react-three/fiber`) – 3D rendering
+- **Drei** (`@react-three/drei`) – helpers (controls, text, etc.)
+- **@react-three/rapier** – physics engine
+- **Tailwind CSS** – styling
+- **Socket.io** – multiplayer sync (in progress)
+- **Supabase / Local DB** – backend memory + agent storage (planned)
+- **Vercel Serverless Functions** – distributed AI endpoints
+
+---
+
+## 🚀 Usage
+
+```bash
+git clone https://github.com/yourusername/webtrix
+cd webtrix
+npm install
+npm run dev
