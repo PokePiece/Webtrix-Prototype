@@ -50,6 +50,7 @@ import { useRealtimePlacedObjects } from "@/lib/useRealTimePlacedObjects";
 import VoidNode from "../environment/key/VoidNode";
 import NodeOverlays from "./NodeOverlays";
 import InfoOverlays from "./InfoOverlays";
+import GoogleNode from "../environment/key/GoogleNode";
 
 //if (typeof window !== 'undefined') studio.initialize()
 
@@ -117,6 +118,8 @@ export default function ThreeScene() {
     const [showVoid, setShowVoid] = useState(false);
     const [showVoidInfo, setShowVoidInfo] = useState(false);
     const [showTreeInfo, setShowTreeInfo] = useState(false);
+    const [showGoogle, setShowGoogle] = useState(false);
+    const [showGoogleInfo, setShowGoogleInfo] = useState(false);
 
 
     //const addItem = useInventoryStore(state => state.addItem)
@@ -410,7 +413,8 @@ export default function ThreeScene() {
                         <Houses />
                         <Chair />
                         <VoidNode setShowVoid={setShowVoid} setShowVoidInfo={setShowVoidInfo} />
-
+                        <GoogleNode setShowGoogle={setShowGoogle} setShowGoogleInfo={setShowGoogleInfo} setIsChatting={setIsChatting} />
+                        
                         {/*Plane Catcher*/}
                         <mesh
                             position={[0, 0, 0]}
@@ -551,7 +555,7 @@ export default function ThreeScene() {
                 setShowTreeInfo={setShowTreeInfo}
                 showTreeInfo={showTreeInfo}
             />
-            <NodeOverlays showVoid={showVoid} setShowVoid={setShowVoid} setIsChatting={setIsChatting} />
+            <NodeOverlays showGoogle={showGoogle} setShowGoogle={setShowGoogle} showVoid={showVoid} setShowVoid={setShowVoid} setIsChatting={setIsChatting} />
             {showMap && <MapOverlay />}
             {mainOverlayActive && (
                 <MainOverlay
